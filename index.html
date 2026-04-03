@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Annual Predictive Forecast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --border-hi: rgba(255,255,255,0.15);
+    --text: #f0f0f5;
+    --muted: #6b6b7a;
+    --dim: #3a3a48;
+    --accent: #4e7fff;
+    --c-forecast:  #4e7fff;
+    --c-raw:       #2dd4a0;
+    --c-booked:    #f06292;
+    --c-avg:       #ffb84d;
+    --c-rawbooked: #b06cff;
+    --r: 12px;
+    --r-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(78,127,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(78,127,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── LOADING ── */
+  .loader {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; gap: 20px; transition: opacity 0.5s ease;
+  }
+  .loader.out { opacity: 0; pointer-events: none; }
+  .loader-brand {
+    font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .loader-brand em { color: var(--accent); font-style: normal; }
+  .loader-track { width: 220px; height: 2px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .loader-fill { height: 100%; background: var(--accent); width: 0; transition: width 0.4s ease; border-radius: 2px; }
+  .loader-msg { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; min-height: 16px; }
+
+  /* ── PAGE ── */
+  .page { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 44px 28px 80px; }
+
+  /* ── HEADER ── */
+  .hdr { margin-bottom: 44px; }
+  .eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(30px, 4.5vw, 48px); font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.05; color: var(--text);
+  }
+  h1 em { color: var(--accent); font-style: normal; }
+  .hdr-meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 20px; font-size: 11px; color: var(--muted); }
+  .hdr-meta-item { display: flex; align-items: center; gap: 7px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c-raw); flex-shrink: 0; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  /* ── ERROR ── */
+  .err {
+    background: rgba(240,98,146,0.08); border: 1px solid rgba(240,98,146,0.25);
+    border-radius: var(--r); padding: 14px 18px; margin-bottom: 24px;
+    font-size: 12px; color: #f06292; display: none; line-height: 1.5;
+  }
+
+  /* ── METRICS ── */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+  .mc {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 18px 20px; transition: border-color 0.2s;
+  }
+  .mc:hover { border-color: var(--border-hi); }
+  .mc.hi { border-color: rgba(78,127,255,0.3); background: rgba(78,127,255,0.04); }
+  .mc-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+  .mc-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .mc.hi .mc-val { color: var(--accent); }
+  .mc-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab {
+    padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.05em; color: var(--muted); background: none; border: none;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: var(--text); border-bottom-color: var(--accent); }
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 24px; margin-bottom: 20px;
+  }
+  .card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .card-title {
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--text); display: flex; align-items: center; gap: 10px;
+  }
+  .card-title::before { content:''; width:3px; height:14px; background:var(--accent); border-radius:2px; display:block; }
+  .cw { position: relative; width: 100%; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 7px; }
+  .li {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px 4px 8px;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .li:hover { border-color: var(--border-hi); }
+  .li.off { opacity: 0.3; }
+  .li-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .li-lbl { font-size: 11px; color: var(--muted); }
+  .li-val { font-size: 11px; font-weight: 500; color: var(--text); margin-left: 3px; }
+
+  /* ── WEEK CONTROLS ── */
+  .wctrl {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 20px 24px; margin-bottom: 20px;
+  }
+  .wctrl-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+  .play-btn {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--r-sm); padding: 8px 20px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    cursor: pointer; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s;
+  }
+  .play-btn:hover { opacity: 0.85; }
+  .play-btn:active { transform: scale(0.97); }
+
+  .speeds { display: flex; gap: 4px; }
+  .spd {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 6px; padding: 6px 10px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .spd.on, .spd:hover { border-color: var(--accent); color: var(--accent); background: rgba(78,127,255,0.08); }
+
+  .slider-row { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 12px; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; flex: 1;
+    height: 3px; background: var(--surface2); border-radius: 2px;
+    outline: none; cursor: pointer; border: 1px solid var(--border);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    border: 2px solid var(--bg); box-shadow: 0 0 0 2px rgba(78,127,255,0.3);
+  }
+  .slider-lbl { font-size: 11px; color: var(--muted); min-width: 80px; text-align: right; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 6px; padding: 5px 10px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .pill:hover { border-color: var(--border-hi); color: var(--text); }
+  .pill.on { background: rgba(78,127,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+  /* ── YOY GRID ── */
+  .yoy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .yr-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; }
+  .yr-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:3px; }
+  .yr-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
+  .yr-bar { margin-bottom: 7px; }
+  .yr-bar-top { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:3px; }
+  .yr-bar-track { height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .yr-bar-fill { height:100%; border-radius:2px; transition: width 0.8s cubic-bezier(.23,1,.32,1); }
+
+  /* ── VARIANCE TABLE ── */
+  .vtable-wrap { overflow-x: auto; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th { text-align:right; padding:8px 10px; color:var(--muted); font-weight:400; letter-spacing:0.05em; border-bottom:1px solid var(--border); white-space:nowrap; }
+  th:first-child { text-align:left; }
+  td { text-align:right; padding:8px 10px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  td:first-child { text-align:left; color:var(--muted); }
+  tr:last-child td { border-bottom:none; }
+  .pos { color: var(--c-raw); }
+  .neg { color: var(--c-booked); }
+  .nt  { color: var(--muted); }
+
+  /* ── FOOTER ── */
+  .footer { margin-top:48px; padding-top:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .foot-txt { font-size:11px; color:var(--dim); }
+
+  @media (max-width: 700px) {
+    .page { padding: 24px 16px 60px; }
+    h1 { font-size: 28px; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .wctrl-top { flex-direction: column; align-items: stretch; }
+  }
+  @media (max-width: 420px) {
+    .metrics { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loader" id="ldr">
+  <div class="loader-brand">Phase<em>2</em> · Forecast</div>
+  <div class="loader-track"><div class="loader-fill" id="ldrBar"></div></div>
+  <div class="loader-msg" id="ldrMsg">initializing…</div>
+</div>
+
+<div class="page">
+  <div class="hdr">
+    <div class="eyebrow">Revenue Intelligence · 2026</div>
+    <h1>Annual Predictive<br><em>Forecast</em></h1>
+    <div class="hdr-meta">
+      <span class="hdr-meta-item"><span class="live-dot"></span> live · google sheets</span>
+      <span class="hdr-meta-item" id="hWeeks">—</span>
+      <span class="hdr-meta-item" id="hLatest">—</span>
+    </div>
+  </div>
+
+  <div class="err" id="errBanner"></div>
+
+  <div class="metrics">
+    <div class="mc"><div class="mc-label">current week</div><div class="mc-val" id="mWk">—</div><div class="mc-sub" id="mWkSub">—</div></div>
+    <div class="mc hi"><div class="mc-label">avg variance prediction</div><div class="mc-val" id="mAvg">—</div><div class="mc-sub">midpoint estimate</div></div>
+    <div class="mc"><div class="mc-label">conservative floor</div><div class="mc-val" id="mLo">—</div><div class="mc-sub">forecast variances</div></div>
+    <div class="mc"><div class="mc-label">optimistic ceiling</div><div class="mc-val" id="mHi">—</div><div class="mc-sub">raw + booked</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="gotoTab('pred')">predictions</button>
+    <button class="tab" onclick="gotoTab('anim')">week animation</button>
+    <button class="tab" onclick="gotoTab('yoy')">year over year</button>
+    <button class="tab" onclick="gotoTab('var')">variance detail</button>
+  </div>
+
+  <!-- PREDICTIONS -->
+  <div class="panel on" id="p-pred">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">2026 monthly revenue predictions</div>
+        <div class="legend" id="lgd-pred"></div>
+      </div>
+      <div class="cw" style="height:380px"><canvas id="cPred"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ANIMATION -->
+  <div class="panel" id="p-anim">
+    <div class="wctrl">
+      <div class="wctrl-top">
+        <button class="play-btn" id="playBtn">▶ play</button>
+        <div class="speeds">
+          <button class="spd" data-ms="1600">0.5×</button>
+          <button class="spd on" data-ms="900">1×</button>
+          <button class="spd" data-ms="400">2×</button>
+          <button class="spd" data-ms="180">4×</button>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="wkSlider" min="0" value="0" step="1">
+          <span class="slider-lbl" id="wkLbl">1 / 1</span>
+        </div>
+      </div>
+      <div class="pills" id="pillBox"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title" id="animTitle">week of —</div>
+        <div class="legend" id="lgd-anim"></div>
+      </div>
+      <div class="cw" style="height:360px"><canvas id="cAnim"></canvas></div>
+    </div>
+  </div>
+
+  <!-- YOY -->
+  <div class="panel" id="p-yoy">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">year-end actuals vs 2026 prediction</div></div>
+      <div class="cw" style="height:320px"><canvas id="cYoy"></canvas></div>
+    </div>
+    <div class="yoy-grid" id="yoyGrid"></div>
+  </div>
+
+  <!-- VARIANCE -->
+  <div class="panel" id="p-var">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">avg % variance by method (2022–2025 historical)</div></div>
+      <div class="cw" style="height:280px"><canvas id="cVar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">variance averages — latest week</div></div>
+      <div class="vtable-wrap"><table id="vtbl"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span class="foot-txt">2026 annual predictive forecast · phase2</span>
+    <span class="foot-txt" id="footTs"></span>
+  </footer>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────────────────────
+const SHEET_ID = '1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY';
+const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const SERIES = [
+  { key:'forecast',  label:'forecast variances',  color:'#4e7fff' },
+  { key:'raw',       label:'raw variances',        color:'#2dd4a0' },
+  { key:'booked',    label:'booked variances',     color:'#f06292' },
+  { key:'avg',       label:'avg variances',        color:'#ffb84d' },
+  { key:'rawbooked', label:'raw + booked',         color:'#b06cff' },
+];
+
+// Known weekly tab names — app uses these as fallback and
+// also tries to discover new ones from the sheet at runtime
+const KNOWN_TABS = [
+  '2025-12-31','2026-1-8','2026-1-15','2026-1-22','2026-1-29',
+  '2026-2-5','2026-2-12','2026-2-19','2026-2-26',
+  '2026-3-5','2026-3-12','2026-3-19','2026-3-26'
+];
+
+// Historical year-end actuals (monthly)
+const ACTUALS = {
+  2022:[2867848,2835145,3001165,3105798,3101214,3064058,3040763,3103533,3035876,2996567,3004257,3077276],
+  2023:[3132228,3141582,3001842,2772312,3049256,3073742,3106358,3147065,3259491,3303432,3305493,3339879],
+  2024:[3219411,3175544,3047560,2769767,2750313,2635356,2628310,2855344,2854757,2904009,2912803,3000413],
+  2025:[2847299,2776475,2667475,2607093,2575720,2503220,2447512,2463769,2459309,2283419,2336306,2409473],
+};
+const YR_COLORS = { 2022:'#4e7fff', 2023:'#2dd4a0', 2024:'#f06292', 2025:'#ffb84d' };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let weeks   = [];   // loaded week objects
+let curIdx  = 0;
+let hidden  = new Set();
+let timer   = null;
+let speed   = 900;
+let cPred, cAnim, cYoy, cVar;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+const fmtM  = v => '$' + (v/1e6).toFixed(1) + 'M';
+const fmtM2 = v => '$' + (v/1e6).toFixed(2) + 'M';
+const sum   = a => a.reduce((x,y) => x+y, 0);
+
+function parseDollar(s) {
+  if (!s) return 0;
+  return parseFloat(String(s).replace(/[$,%\s]/g,'').replace(/,/g,'')) || 0;
+}
+function parsePct(s) {
+  if (!s) return 0;
+  return parseFloat(String(s).replace('%','')) || 0;
+}
+
+function setLoad(pct, msg) {
+  document.getElementById('ldrBar').style.width = pct + '%';
+  document.getElementById('ldrMsg').textContent  = msg;
+}
+function showErr(msg) {
+  const el = document.getElementById('errBanner');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHEETS FETCH
+// Uses the gviz CSV endpoint — works for any "anyone with link" spreadsheet,
+// no API key required.
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchCSV(sheetName, range) {
+  const url =
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq` +
+    `?tqx=out:csv` +
+    `&sheet=${encodeURIComponent(sheetName)}` +
+    `&range=${encodeURIComponent(range)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${sheetName}`);
+  return parseCSV(await r.text());
+}
+
+function parseCSV(text) {
+  return text.trim().split('\n').map(line => {
+    const cells = []; let q = false, cell = '';
+    for (const c of line) {
+      if (c === '"') { q = !q; }
+      else if (c === ',' && !q) { cells.push(cell.trim()); cell = ''; }
+      else cell += c;
+    }
+    cells.push(cell.trim());
+    return cells;
+  });
+}
+
+// Try to discover tab names from the sheet's HTML — catches new weeks automatically
+async function discoverTabs() {
+  try {
+    const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/htmlview`);
+    const html = await r.text();
+    const found = [...html.matchAll(/"sheetName"\s*:\s*"([^"]+)"/g)].map(m => m[1]);
+    if (found.length) return found;
+  } catch(e) {}
+  return null;
+}
+
+function isWeekTab(name) { return /^\d{4}-\d{1,2}-\d{1,2}$/.test(name); }
+
+async function loadWeek(tabName) {
+  // Rows 72–80 contain the extrapolation section
+  const rows = await fetchCSV(tabName, 'A72:P80');
+  if (!rows || rows.length < 8) return null;
+
+  // Row index within this 9-row fetch:
+  // 0 → "Extrapolations" label
+  // 1 → Forecast variance averages (%)
+  // 2 → Raw variance averages (%)
+  // 3 → Booked variance averages (%)
+  // 4 → Predicted from Forecast Variances  ← the 5 prediction lines
+  // 5 → Predicted from Raw Variances
+  // 6 → Predicted from Booked Variances
+  // 7 → Predicted from Average Variances
+  // 8 → Predicted from Raw+Booked Variances
+  // Columns E–P (index 4–15) = Jan–Dec
+
+  const mo = (row) => MONTHS.map((_, i) => parseDollar(row?.[i + 4]));
+  const pct = (row) => MONTHS.map((_, i) => parsePct(row?.[i + 4]));
+
+  const pred = {
+    label:        tabName,
+    forecast:     mo(rows[4]),
+    raw:          mo(rows[5]),
+    booked:       mo(rows[6]),
+    avg:          mo(rows[7]),
+    rawbooked:    mo(rows[8]),
+    fcastPct:     pct(rows[1]),
+    rawPct:       pct(rows[2]),
+    bookedPct:    pct(rows[3]),
+  };
+
+  // Must have at least some non-zero predictions to be valid
+  if (!pred.avg.some(v => v > 0)) return null;
+  return pred;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+async function init() {
+  setLoad(8, 'discovering weekly snapshots…');
+
+  // Try to find all tab names dynamically; fall back to known list
+  let tabNames = [];
+  const discovered = await discoverTabs();
+  if (discovered) {
+    tabNames = discovered.filter(isWeekTab).sort();
+  }
+  if (!tabNames.length) tabNames = [...KNOWN_TABS];
+
+  setLoad(18, `found ${tabNames.length} weekly tabs — loading data…`);
+
+  for (let i = 0; i < tabNames.length; i++) {
+    const name = tabNames[i];
+    setLoad(18 + Math.round((i / tabNames.length) * 68), `reading ${name}…`);
+    try {
+      const w = await loadWeek(name);
+      if (w) weeks.push(w);
+    } catch(e) { console.warn('skip', name, e.message); }
+  }
+
+  if (!weeks.length) {
+    showErr(
+      'Could not load data. Make sure the spreadsheet is shared as "Anyone with the link can view", ' +
+      'then refresh this page.'
+    );
+    document.getElementById('ldr').classList.add('out');
+    return;
+  }
+
+  curIdx = weeks.length - 1;
+  setLoad(92, 'rendering…');
+  await pause(80);
+
+  render();
+
+  setLoad(100, 'ready');
+  await pause(350);
+  document.getElementById('ldr').classList.add('out');
+}
+
+const pause = ms => new Promise(r => setTimeout(r, ms));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+function render() {
+  updateMetrics();
+  buildLegend('lgd-pred');
+  buildLegend('lgd-anim');
+  buildPredChart();
+  buildAnimChart();
+  buildYOYChart();
+  buildVarChart();
+  buildVarTable();
+  buildPills();
+  buildYOYGrid();
+
+  document.getElementById('hWeeks').textContent  = `${weeks.length} weeks tracked`;
+  document.getElementById('hLatest').textContent = `latest: ${weeks[weeks.length - 1].label}`;
+  document.getElementById('footTs').textContent  = `loaded ${new Date().toLocaleString()}`;
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.querySelectorAll('.spd').forEach(b => {
+    b.addEventListener('click', () => {
+      speed = +b.dataset.ms;
+      document.querySelectorAll('.spd').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      if (timer) { stopPlay(); startPlay(); }
+    });
+  });
+}
+
+function updateMetrics() {
+  const w = weeks[curIdx];
+  document.getElementById('mWk').textContent    = w.label;
+  document.getElementById('mWkSub').textContent = `week ${curIdx + 1} of ${weeks.length}`;
+  document.getElementById('mAvg').textContent   = fmtM(sum(w.avg));
+  document.getElementById('mLo').textContent    = fmtM(sum(w.forecast));
+  document.getElementById('mHi').textContent    = fmtM(sum(w.rawbooked));
+}
+
+// ─── LEGEND ──────────────────────────────────────────────────────────────────
+function buildLegend(id) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  SERIES.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'li' + (hidden.has(s.key) ? ' off' : '');
+    div.dataset.key = s.key;
+    div.innerHTML =
+      `<span class="li-dot" style="background:${s.color}"></span>` +
+      `<span class="li-lbl">${s.label}</span>`;
+    div.addEventListener('click', () => toggleSeries(s.key));
+    el.appendChild(div);
+  });
+}
+
+function toggleSeries(key) {
+  hidden.has(key) ? hidden.delete(key) : hidden.add(key);
+  document.querySelectorAll(`.li[data-key="${key}"]`).forEach(el =>
+    el.classList.toggle('off', hidden.has(key))
+  );
+  [cPred, cAnim].forEach(ch => {
+    if (!ch) return;
+    const i = SERIES.findIndex(s => s.key === key);
+    if (i >= 0) { ch.data.datasets[i].hidden = hidden.has(key); ch.update(); }
+  });
+}
+
+// ─── CHART HELPERS ───────────────────────────────────────────────────────────
+function datasets(w) {
+  return SERIES.map(s => ({
+    label: s.label,
+    data: w[s.key],
+    borderColor: s.color,
+    backgroundColor: s.color + '15',
+    borderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 7,
+    pointBackgroundColor: s.color,
+    tension: 0.4,
+    fill: false,
+    hidden: hidden.has(s.key),
+  }));
+}
+
+const baseOpts = () => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#16161d',
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+      titleColor: '#f0f0f5',
+      bodyColor: '#9999aa',
+      titleFont: { family: 'DM Mono', size: 12 },
+      bodyFont: { family: 'DM Mono', size: 11 },
+      padding: 14,
+      callbacks: {
+        label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.raw).toLocaleString()}`
+      }
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: 'rgba(255,255,255,0.04)' },
+      ticks: { color: '#6b6b7a', font: { family: 'DM Mono', size: 11 } },
+    },
+    y: {
+      min: 1700000, max: 4600000,
+      grid: { color: 'rgba(255,255,255,0.04)' },
+      ticks: {
+        color: '#6b6b7a',
+        font: { family: 'DM Mono', size: 11 },
+        callback: v => '$' + (v / 1e6).toFixed(1) + 'M'
+      }
+    }
+  }
+});
+
+// ─── PREDICTIONS CHART ───────────────────────────────────────────────────────
+function buildPredChart() {
+  cPred = new Chart(document.getElementById('cPred'), {
+    type: 'line',
+    data: { labels: MONTHS, datasets: datasets(weeks[curIdx]) },
+    options: baseOpts(),
+  });
+}
+
+// ─── ANIMATION CHART ─────────────────────────────────────────────────────────
+function buildAnimChart() {
+  const opts = baseOpts();
+  opts.animation = { duration: 480, easing: 'easeInOutQuart' };
+  cAnim = new Chart(document.getElementById('cAnim'), {
+    type: 'line',
+    data: { labels: MONTHS, datasets: datasets(weeks[curIdx]) },
+    options: opts,
+  });
+  syncAnimTitle();
+}
+
+function goToWeek(idx) {
+  curIdx = idx;
+  const w = weeks[idx];
+  SERIES.forEach((s, i) => {
+    cAnim.data.datasets[i].data = w[s.key];
+    cPred.data.datasets[i].data = w[s.key];
+  });
+  cAnim.update();
+  cPred.update();
+  syncAnimTitle();
+  updateMetrics();
+  syncPills(idx);
+  document.getElementById('wkSlider').value = idx;
+  document.getElementById('wkLbl').textContent = `${idx + 1} / ${weeks.length}`;
+}
+
+function syncAnimTitle() {
+  document.getElementById('animTitle').textContent = `predictions — week of ${weeks[curIdx].label}`;
+}
+
+// ─── PILLS + SLIDER ───────────────────────────────────────────────────────────
+function buildPills() {
+  const box    = document.getElementById('pillBox');
+  const slider = document.getElementById('wkSlider');
+  slider.max   = weeks.length - 1;
+  slider.value = curIdx;
+  document.getElementById('wkLbl').textContent = `${curIdx + 1} / ${weeks.length}`;
+
+  weeks.forEach((w, i) => {
+    const p = document.createElement('div');
+    p.className = 'pill' + (i === curIdx ? ' on' : '');
+    p.textContent = w.label;
+    p.addEventListener('click', () => goToWeek(i));
+    box.appendChild(p);
+  });
+
+  slider.addEventListener('input', () => goToWeek(+slider.value));
+}
+
+function syncPills(idx) {
+  document.querySelectorAll('.pill').forEach((p, i) =>
+    p.classList.toggle('on', i === idx)
+  );
+}
+
+// ─── PLAY / PAUSE ─────────────────────────────────────────────────────────────
+function togglePlay() { timer ? stopPlay() : startPlay(); }
+
+function startPlay() {
+  document.getElementById('playBtn').textContent = '⏸ pause';
+  let i = curIdx >= weeks.length - 1 ? 0 : curIdx;
+  goToWeek(i);
+  timer = setInterval(() => {
+    i++;
+    if (i >= weeks.length) { stopPlay(); return; }
+    goToWeek(i);
+  }, speed);
+}
+
+function stopPlay() {
+  clearInterval(timer); timer = null;
+  document.getElementById('playBtn').textContent = '▶ play';
+}
+
+// ─── YEAR OVER YEAR ───────────────────────────────────────────────────────────
+function buildYOYChart() {
+  const ds = Object.entries(ACTUALS).map(([yr, vals]) => ({
+    label: yr,
+    data: vals.map(v => v / 1e6),
+    borderColor: YR_COLORS[yr],
+    backgroundColor: 'transparent',
+    borderWidth: 2, pointRadius: 3, tension: 0.4,
+  }));
+
+  // 2026 average prediction (dashed)
+  ds.push({
+    label: '2026 predicted',
+    data: weeks[weeks.length - 1].avg.map(v => v / 1e6),
+    borderColor: '#b06cff',
+    backgroundColor: 'transparent',
+    borderWidth: 2, borderDash: [6, 3], pointRadius: 3, tension: 0.4,
+  });
+
+  const opts = baseOpts();
+  opts.scales.y.min = 1.5;
+  opts.scales.y.max = 3.8;
+  opts.scales.y.ticks.callback = v => '$' + v.toFixed(1) + 'M';
+  opts.plugins.tooltip.callbacks.label = ctx => ` ${ctx.dataset.label}: $${ctx.raw.toFixed(2)}M`;
+
+  cYoy = new Chart(document.getElementById('cYoy'), { type: 'line', data: { labels: MONTHS, datasets: ds }, options: opts });
+}
+
+function buildYOYGrid() {
+  const grid = document.getElementById('yoyGrid');
+  const maxV = 3600000;
+  Object.entries(ACTUALS).forEach(([yr, vals]) => {
+    const total = sum(vals);
+    const c = YR_COLORS[yr];
+    const card = document.createElement('div');
+    card.className = 'yr-card';
+    card.innerHTML =
+      `<div class="yr-title" style="color:${c}">${yr}</div>` +
+      `<div class="yr-sub">total ${fmtM2(total)} · avg ${fmtM(total/12)}/mo</div>` +
+      vals.map((v, i) =>
+        `<div class="yr-bar">
+          <div class="yr-bar-top"><span>${MONTHS[i]}</span><span>$${Math.round(v/1000)}K</span></div>
+          <div class="yr-bar-track">
+            <div class="yr-bar-fill" style="width:${Math.round(v/maxV*100)}%;background:${c}40;border-right:2px solid ${c}"></div>
+          </div>
+        </div>`
+      ).join('');
+    grid.appendChild(card);
+  });
+}
+
+// ─── VARIANCE CHART ───────────────────────────────────────────────────────────
+function buildVarChart() {
+  const w = weeks[weeks.length - 1];
+  const ds = [
+    { label:'forecast %', data: w.fcastPct,  borderColor:'#4e7fff', backgroundColor:'rgba(78,127,255,0.08)',  fill:true, borderWidth:2, tension:0.4, pointRadius:3 },
+    { label:'raw %',      data: w.rawPct,    borderColor:'#2dd4a0', backgroundColor:'rgba(45,212,160,0.08)',  fill:true, borderWidth:2, tension:0.4, pointRadius:3 },
+    { label:'booked %',   data: w.bookedPct, borderColor:'#f06292', backgroundColor:'rgba(240,98,146,0.08)', fill:true, borderWidth:2, tension:0.4, pointRadius:3 },
+  ];
+  const opts = baseOpts();
+  delete opts.scales.y.min; delete opts.scales.y.max;
+  opts.scales.y.ticks.callback = v => v.toFixed(0) + '%';
+  opts.plugins.tooltip.callbacks.label = ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`;
+
+  cVar = new Chart(document.getElementById('cVar'), { type: 'line', data: { labels: MONTHS, datasets: ds }, options: opts });
+}
+
+function buildVarTable() {
+  const w = weeks[weeks.length - 1];
+  const thead = document.querySelector('#vtbl thead');
+  const tbody = document.querySelector('#vtbl tbody');
+  thead.innerHTML = `<tr><th>method</th>${MONTHS.map(m => `<th>${m}</th>`).join('')}</tr>`;
+  const rows = [
+    { label: 'forecast avg %', data: w.fcastPct },
+    { label: 'raw avg %',      data: w.rawPct   },
+    { label: 'booked avg %',   data: w.bookedPct },
+  ];
+  tbody.innerHTML = rows.map(r =>
+    `<tr><td>${r.label}</td>${r.data.map(v => {
+      const cls = Math.abs(v) < 0.1 ? 'nt' : v > 0 ? 'pos' : 'neg';
+      return `<td class="${cls}">${v.toFixed(1)}%</td>`;
+    }).join('')}</tr>`
+  ).join('');
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+const TABS = ['pred','anim','yoy','var'];
+function gotoTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) =>
+    t.classList.toggle('on', TABS[i] === name)
+  );
+  document.querySelectorAll('.panel').forEach((p, i) =>
+    p.classList.toggle('on', TABS[i] === name)
+  );
+  setTimeout(() => [cPred, cAnim, cYoy, cVar].forEach(c => c?.resize()), 60);
+}
+
+// ─── GO ───────────────────────────────────────────────────────────────────────
+init().catch(err => {
+  console.error(err);
+  showErr('Unexpected error: ' + err.message);
+  document.getElementById('ldr').classList.add('out');
+});
+</script>
+</body>
+</html>
