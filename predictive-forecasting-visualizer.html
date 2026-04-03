@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predictive Forecasting Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#171717;--bg2:#1c1c1c;--card:#2a2a2a;--card2:#353535;
+  --blue:#0080FF;--coral:#FA5C5C;--violet:#9484FF;--teal:#73F2E5;
+  --plum:#AF23AC;--softblue:#7fc7ed;--notgray:#CFC7D4;
+  --green:#22c55e;--white:#FFFFFF;--border:rgba(255,255,255,0.07);
+  --text2:#CFC7D4;--text3:#888;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Raleway',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden;}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  background:rgba(23,23,23,0.96);position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);gap:20px;flex-wrap:wrap;
+}
+.hdr-left{display:flex;align-items:center;gap:14px;}
+.live-wrap{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.live-dot{
+  width:9px;height:9px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse-dot 2.2s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{transform:scale(1);box-shadow:0 0 8px rgba(34,197,94,0.6);}
+  50%{transform:scale(1.3);box-shadow:0 0 16px rgba(34,197,94,0.9);}
+}
+.live-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);}
+h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
+.hdr-stats{display:flex;align-items:center;gap:24px;flex:1;justify-content:center;flex-wrap:wrap;}
+.hdr-stat{text-align:center;}
+.hdr-stat .num{font-size:20px;font-weight:800;color:var(--white);display:block;line-height:1.1;}
+.hdr-stat .lbl{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.refresh-btn{
+  background:transparent;border:1px solid var(--border);color:var(--text2);
+  padding:7px 14px;border-radius:8px;font-family:'Raleway',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;gap:6px;
+}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
+.refresh-btn.loading .spin{animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.data-ts{font-size:10px;color:var(--text3);white-space:nowrap;}
+
+/* ── BANNER ── */
+.banner{
+  margin:20px 28px 0;border-radius:14px;padding:20px 28px;
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+  transition:background 0.4s;
+}
+.banner.green{background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(34,197,94,0.08));border:1px solid rgba(34,197,94,0.35);}
+.banner.red{background:linear-gradient(135deg,rgba(250,92,92,0.18),rgba(250,92,92,0.08));border:1px solid rgba(250,92,92,0.35);}
+.banner-status-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;
+}
+.banner.green .banner-status-tag{background:rgba(34,197,94,0.2);color:var(--green);}
+.banner.red .banner-status-tag{background:rgba(250,92,92,0.2);color:var(--coral);}
+.banner-left{display:flex;flex-direction:column;gap:6px;min-width:140px;}
+.banner-week{font-size:11px;color:var(--text2);}
+.banner-center{flex:1;text-align:center;}
+.banner-big{font-size:42px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.banner.green .banner-big{color:var(--green);}
+.banner.red .banner-big{color:var(--coral);}
+.banner-sub{font-size:11px;color:var(--text2);margin-top:4px;font-weight:500;}
+.banner-right{text-align:right;}
+.banner-delta{font-size:16px;font-weight:700;}
+.banner.green .banner-delta{color:var(--green);}
+.banner.red .banner-delta{color:var(--coral);}
+.banner-target{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* ── METRIC CARDS ── */
+.cards-row{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:12px;padding:16px 28px 0;
+}
+@media(max-width:900px){.cards-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.cards-row{grid-template-columns:1fr;}}
+.metric-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;transition:border-color 0.2s;
+}
+.metric-card.hero{border-color:rgba(0,128,255,0.4);background:linear-gradient(135deg,rgba(0,128,255,0.12),rgba(0,128,255,0.04));}
+.metric-card .mc-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+.metric-card .mc-value{font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
+.metric-card .mc-sub{font-size:10px;color:var(--text3);margin-top:4px;font-weight:500;}
+.mc-value.green{color:var(--green);}
+.mc-value.blue{color:var(--blue);}
+.mc-value.coral{color:var(--coral);}
+
+/* ── TABS ── */
+.tabs-wrap{padding:20px 28px 0;}
+.tabs-nav{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs-nav::-webkit-scrollbar{display:none;}
+.tab-btn{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text3);padding:11px 20px;font-family:'Raleway',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  white-space:nowrap;margin-bottom:-1px;letter-spacing:0.2px;
+}
+.tab-btn:hover{color:var(--text2);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* ── TAB PANELS ── */
+.tab-panel{display:none;padding:24px 0 0;}
+.tab-panel.active{display:block;}
+.chart-wrap{position:relative;height:380px;width:100%;padding:0 28px;}
+.chart-wrap.short{height:320px;}
+.section-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 28px;margin-bottom:14px;}
+
+/* ── CUSTOM LEGEND (Tab 2) ── */
+.legend-wrap{padding:16px 28px;display:flex;gap:32px;flex-wrap:wrap;}
+.legend-group-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.legend-group{display:flex;flex-direction:column;gap:4px;}
+.legend-item{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:4px 8px;border-radius:6px;transition:background 0.15s;
+  opacity:1;user-select:none;
+}
+.legend-item:hover{background:rgba(255,255,255,0.05);}
+.legend-item.hidden{opacity:0.35;}
+.legend-dot{width:28px;height:3px;border-radius:2px;flex-shrink:0;}
+.legend-dot.dashed{background:none;border-bottom:2px dashed;}
+.legend-text{font-size:11px;font-weight:600;color:var(--text2);}
+
+/* ── ANIMATION CONTROLS ── */
+.anim-controls{
+  padding:12px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.play-btn{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--blue);color:#fff;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background 0.2s;
+  flex-shrink:0;
+}
+.play-btn:hover{background:#0066cc;}
+.speed-group,.ghost-group{display:flex;align-items:center;gap:8px;}
+.ctrl-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;}
+.pill-group{display:flex;gap:4px;flex-wrap:wrap;}
+.ctrl-pill{
+  background:var(--card);border:1px solid var(--border);color:var(--text2);
+  padding:5px 10px;border-radius:6px;font-family:'Raleway',sans-serif;
+  font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;
+}
+.ctrl-pill:hover,.ctrl-pill.active{background:rgba(0,128,255,0.2);border-color:var(--blue);color:var(--blue);}
+.week-scrubber{flex:1;min-width:150px;max-width:280px;accent-color:var(--blue);}
+.scrubber-week{font-size:12px;font-weight:700;color:var(--blue);min-width:70px;}
+.week-pills-wrap{padding:10px 28px;display:flex;gap:6px;flex-wrap:wrap;}
+.week-pill{
+  background:var(--card);border:1px solid var(--border);color:var(--text3);
+  padding:5px 10px;border-radius:6px;font-family:'Raleway',sans-serif;
+  font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;
+}
+.week-pill:hover{border-color:rgba(148,132,255,0.5);color:var(--violet);}
+.week-pill.active{background:rgba(148,132,255,0.2);border-color:var(--violet);color:var(--violet);}
+
+/* ── YOY BARS ── */
+.yoy-cards{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+  padding:20px 28px;
+}
+@media(max-width:900px){.yoy-cards{grid-template-columns:repeat(2,1fr);}}
+.yoy-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.yoy-card .yc-year{font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:6px;}
+.yoy-card .yc-total{font-size:20px;font-weight:800;line-height:1;margin-bottom:4px;}
+.yoy-card .yc-avg{font-size:10px;color:var(--text3);}
+.yoy-bar-track{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:10px;overflow:hidden;}
+.yoy-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
+
+/* ── VARIANCE TABLE ── */
+.var-table-wrap{padding:16px 28px 28px;overflow-x:auto;}
+table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
+.var-table th{
+  padding:8px 10px;text-align:center;font-weight:700;color:var(--text3);
+  letter-spacing:0.5px;font-size:10px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.var-table th:first-child{text-align:left;}
+.var-table td{padding:9px 10px;text-align:center;font-weight:600;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.var-table td:first-child{text-align:left;font-size:10px;color:var(--text2);font-weight:700;letter-spacing:0.3px;}
+.var-table tr:hover td{background:rgba(255,255,255,0.025);}
+.vc-neg-lo{background:rgba(250,92,92,0.08);color:#f87171;}
+.vc-neg-md{background:rgba(250,92,92,0.18);color:#fc8181;}
+.vc-neg-hi{background:rgba(250,92,92,0.32);color:#FA5C5C;}
+.vc-pos-lo{background:rgba(34,197,94,0.08);color:#6ee7b7;}
+.vc-pos-md{background:rgba(34,197,94,0.18);color:#4ade80;}
+.vc-pos-hi{background:rgba(34,197,94,0.32);color:#22c55e;}
+.vc-zero{color:var(--text3);}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.status-bar{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px;font-size:11px;color:var(--text3);
+}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
+.status-dot.ok{background:var(--green);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header>
+  <div class="hdr-left">
+    <div class="live-wrap">
+      <div class="live-dot"></div>
+      <span class="live-label">LIVE</span>
+    </div>
+    <h1>Predictive Forecasting Visualizer</h1>
+  </div>
+  <div class="hdr-stats">
+    <div class="hdr-stat">
+      <span class="num" id="hdr-weeks">13</span>
+      <span class="lbl">weeks of 2026 tracked</span>
+    </div>
+    <div class="hdr-stat">
+      <span class="num" id="hdr-years">4</span>
+      <span class="lbl">years in model</span>
+    </div>
+    <div class="hdr-stat">
+      <span class="num" id="hdr-week">2026-3-26</span>
+      <span class="lbl">latest week</span>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="data-ts" id="data-ts">Embedded data</span>
+    <button class="refresh-btn" onclick="liveRefresh()">
+      <span class="spin">↻</span> Refresh
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ BANNER ═══════════════════════════════ -->
+<div class="banner green" id="main-banner">
+  <div class="banner-left">
+    <span class="banner-status-tag">✓ ON TRACK</span>
+    <span class="banner-week" id="banner-week-label">As of week 2026-3-26</span>
+  </div>
+  <div class="banner-center">
+    <div class="banner-big" id="banner-prediction">$29.34M</div>
+    <div class="banner-sub">Average Variance Prediction</div>
+  </div>
+  <div class="banner-right">
+    <div class="banner-delta" id="banner-delta">↑ +$3.34M above target</div>
+    <div class="banner-target">vs. $26M annual target</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ METRIC CARDS ══════════════════════════════ -->
+<div class="cards-row">
+  <div class="metric-card">
+    <div class="mc-label">Current Week</div>
+    <div class="mc-value blue" id="mc-week" style="font-size:20px;">2026-3-26</div>
+    <div class="mc-sub">latest data snapshot</div>
+  </div>
+  <div class="metric-card hero">
+    <div class="mc-label">Avg Variance Prediction</div>
+    <div class="mc-value green" id="mc-avg">$29.34M</div>
+    <div class="mc-sub">midpoint of 3 variance models</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Conservative Floor</div>
+    <div class="mc-value" id="mc-floor" style="color:var(--notgray);">$26.88M</div>
+    <div class="mc-sub">forecast variances model</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Optimistic Ceiling</div>
+    <div class="mc-value" id="mc-ceiling" style="color:var(--violet);">$30.55M</div>
+    <div class="mc-sub">raw + booked variances model</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ TABS ══════════════════════════════════ -->
+<div class="tabs-wrap">
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="0">Weekly Trend</button>
+    <button class="tab-btn" data-tab="1">All Lines</button>
+    <button class="tab-btn" data-tab="2">Animation</button>
+    <button class="tab-btn" data-tab="3">Year Over Year</button>
+    <button class="tab-btn" data-tab="4">Variance Detail</button>
+  </nav>
+
+  <!-- ─── TAB 0: Weekly Trend ─── -->
+  <div class="tab-panel active" id="panel-0">
+    <p style="padding:0 28px 14px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.3px;">
+      Predicted from Average Variances &mdash; annual revenue total tracked week by week &nbsp;&middot;&nbsp; Dashed line = $26M target
+    </p>
+    <div class="chart-wrap">
+      <canvas id="chart-trend"></canvas>
+    </div>
+  </div>
+
+  <!-- ─── TAB 1: All Lines ─── -->
+  <div class="tab-panel" id="panel-1">
+    <div id="legend-alllines" class="legend-wrap"></div>
+    <div class="chart-wrap">
+      <canvas id="chart-alllines"></canvas>
+    </div>
+  </div>
+
+  <!-- ─── TAB 2: Animation ─── -->
+  <div class="tab-panel" id="panel-2">
+    <div class="anim-controls">
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <div class="speed-group">
+        <span class="ctrl-label">Speed</span>
+        <div class="pill-group" id="speed-pills">
+          <button class="ctrl-pill" data-speed="0.5">0.5×</button>
+          <button class="ctrl-pill active" data-speed="1">1×</button>
+          <button class="ctrl-pill" data-speed="2">2×</button>
+          <button class="ctrl-pill" data-speed="4">4×</button>
+        </div>
+      </div>
+      <input type="range" class="week-scrubber" id="week-scrubber" min="0" max="12" value="12">
+      <span class="scrubber-week" id="scrubber-label">3/26</span>
+      <div class="ghost-group">
+        <span class="ctrl-label">Ghost Trail</span>
+        <div class="pill-group" id="ghost-pills">
+          <button class="ctrl-pill" data-ghost="0">Off</button>
+          <button class="ctrl-pill" data-ghost="3">3 wks</button>
+          <button class="ctrl-pill active" data-ghost="5">5 wks</button>
+          <button class="ctrl-pill" data-ghost="99">All</button>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart-animation"></canvas>
+    </div>
+    <div class="week-pills-wrap" id="week-pills"></div>
+  </div>
+
+  <!-- ─── TAB 3: Year Over Year ─── -->
+  <div class="tab-panel" id="panel-3">
+    <div class="chart-wrap">
+      <canvas id="chart-yoy"></canvas>
+    </div>
+    <div class="yoy-cards" id="yoy-cards"></div>
+  </div>
+
+  <!-- ─── TAB 4: Variance Detail ─── -->
+  <div class="tab-panel" id="panel-4">
+    <div class="chart-wrap short">
+      <canvas id="chart-variance"></canvas>
+    </div>
+    <div class="var-table-wrap">
+      <table class="var-table" id="var-table"></table>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot ok" id="status-dot"></div>
+  <span id="status-msg">Data loaded · <a href="https://docs.google.com/spreadsheets/d/1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a></span>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════════════════════════
+const SHEET_ID = '1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY';
+const TARGET   = 26000000;
+const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Weekly avg-variance predictions (from 2026 Trend tab P:AC)
+let WEEKLY_TREND = [
+  {label:'2025-12-31',short:'12/31',total:29686138,months:[2294321,2306342,2259111,2233039,2256681,2253032,2437463,2500123,2530750,2643983,2864802,3106493]},
+  {label:'2026-1-8', short:'1/8',  total:29443125,months:[2257994,2288839,2248517,2239912,2245593,2243978,2429166,2483247,2510960,2633032,2823911,3037976]},
+  {label:'2026-1-15',short:'1/15', total:29199660,months:[2283830,2258827,2253316,2214271,2220892,2256397,2461275,2475589,2483236,2579985,2753242,2958801]},
+  {label:'2026-1-22',short:'1/22', total:30409609,months:[2282460,2304634,2352929,2381082,2382462,2424325,2673193,2617640,2642253,2613555,2763224,2971850]},
+  {label:'2026-1-29',short:'1/29', total:29893465,months:[2299563,2286625,2294928,2313764,2357442,2371299,2593530,2576203,2579375,2574047,2741968,2904719]},
+  {label:'2026-2-5', short:'2/5',  total:30014012,months:[2303929,2300855,2298270,2326945,2353028,2369291,2613240,2581412,2601305,2586563,2758391,2920782]},
+  {label:'2026-2-12',short:'2/12', total:29193455,months:[2300413,2304424,2290215,2265745,2325825,2307846,2440269,2364344,2384878,2568901,2733299,2907295]},
+  {label:'2026-2-19',short:'2/19', total:29067362,months:[2299251,2298710,2259444,2262828,2290312,2253337,2388830,2392662,2461938,2593374,2712619,2854056]},
+  {label:'2026-2-26',short:'2/26', total:29605371,months:[2292331,2240237,2259306,2352276,2410536,2324378,2423836,2466892,2546755,2614886,2744645,2929294]},
+  {label:'2026-3-5', short:'3/5',  total:30043855,months:[2292331,2234025,2290919,2384530,2494050,2412993,2489659,2511555,2597282,2681273,2739725,2915513]},
+  {label:'2026-3-12',short:'3/12', total:30302855,months:[2292331,2228606,2292037,2363109,2492041,2422195,2494305,2533181,2608381,2755723,2833594,2987353]},
+  {label:'2026-3-19',short:'3/19', total:29869606,months:[2277791,2218606,2293734,2390389,2523871,2473052,2422094,2453869,2527734,2712179,2712258,2864030]},
+  {label:'2026-3-26',short:'3/26', total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+];
+
+// All 8 lines for current week
+let CURRENT_LINES = {
+  forecastVar: {label:'Predicted — Forecast Variances',  total:26882058, months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
+  rawVar:      {label:'Predicted — Raw Variances',       total:28673825, months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
+  bookedVar:   {label:'Predicted — Booked Variances',    total:30102572, months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
+  avgVar:      {label:'Predicted — Average Variances',   total:29339184, months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+  rbVar:       {label:'Predicted — Raw+Booked Variances',total:30553720, months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]},
+  offFcst:     {label:'Official Forecast / Budget',      total:27148021, months:[2280521,2218606,2215585,2398899,2427200,2407211,2200000,2200000,2200000,2200000,2200000,2200000]},
+  rawFcst:     {label:'Raw Forecast',                    total:27163312, months:[2280521,2218606,2250585,2409333,2757900,2781858,2540504,2321286,2170771,1924105,1786308,1721536]},
+  bookedProj:  {label:'Booked Projects',                 total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
+};
+
+// Year-over-year actuals
+const YOY = {
+  2022:{total:36233501,months:[2867848,2835145,3001165,3105798,3101214,3064058,3040763,3103533,3035876,2996567,3004257,3077276],color:'#7fc7ed'},
+  2023:{total:37632680,months:[3132228,3141582,3001842,2772312,3049256,3073742,3106358,3147065,3259491,3303432,3305493,3339879],color:'#9484FF'},
+  2024:{total:34753587,months:[3219411,3175544,3047560,2769767,2750313,2635356,2628310,2855344,2854757,2904009,2912803,3000413],color:'#73F2E5'},
+  2025:{total:30377071,months:[2847299,2776475,2667475,2607093,2575720,2503220,2447512,2463769,2459309,2283419,2336306,2409473],color:'#CFC7D4'},
+};
+
+// Variance averages (current week)
+let VAR_AVGS = {
+  forecast:[ 0,      0,    -0.19, -0.91, -0.07, -2.37, -2.38, -0.56, -0.02, -2.49, -2.18,  0.68],
+  raw:     [ 0,      0,     0.45,  0.10, -3.07, -7.31, -2.43, -0.92,  6.83, 21.66, 36.88, 43.91],
+  booked:  [ 0,      0,     0.45,  3.89, 16.26, 24.45, 79.52,115.00,133.28,222.96,244.60,269.43],
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════════════════
+const fmt  = v => '$'+(v/1e6).toFixed(2)+'M';
+const fmtK = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : '$'+Math.round(v/1e3)+'K';
+
+const CHART_COMMON = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:false},
+    tooltip:{
+      backgroundColor:'#252525',titleColor:'#CFC7D4',bodyColor:'#fff',
+      borderColor:'rgba(255,255,255,0.12)',borderWidth:1,
+      padding:12,cornerRadius:8,titleFont:{family:'Raleway',weight:'700'},
+      bodyFont:{family:'Raleway',weight:'500'},
+    }
+  },
+  scales:{
+    x:{
+      grid:{color:'rgba(255,255,255,0.04)'},
+      ticks:{color:'#888',font:{family:'Raleway',size:11},maxRotation:0},
+      border:{color:'rgba(255,255,255,0.08)'}
+    },
+    y:{
+      grid:{color:'rgba(255,255,255,0.04)'},
+      ticks:{color:'#888',font:{family:'Raleway',size:11},callback:v=>'$'+(v/1e6).toFixed(1)+'M'},
+      border:{color:'rgba(255,255,255,0.08)'}
+    }
+  }
+};
+
+function deepMerge(base, ovr){
+  const res = Object.assign({}, base);
+  for(const k in ovr){
+    if(ovr[k] && typeof ovr[k]==='object' && !Array.isArray(ovr[k]))
+      res[k] = deepMerge(base[k]||{}, ovr[k]);
+    else res[k] = ovr[k];
+  }
+  return res;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB 0 — WEEKLY TREND
+// ══════════════════════════════════════════════════════════════════
+let chartTrend;
+function initTrend(){
+  const ctx = document.getElementById('chart-trend').getContext('2d');
+  const labels = WEEKLY_TREND.map(w=>w.short);
+  const vals   = WEEKLY_TREND.map(w=>w.total);
+  const GREEN = '#22c55e', RED = '#FA5C5C';
+
+  chartTrend = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Avg Variance Prediction',
+          data: vals,
+          borderWidth:2.5,
+          pointRadius:5,
+          pointHoverRadius:7,
+          tension:0.3,
+          fill:false,
+          segment:{
+            borderColor: ctx => {
+              const avg = (ctx.p0.parsed.y + ctx.p1.parsed.y)/2;
+              return avg >= TARGET ? GREEN : RED;
+            }
+          },
+          pointBackgroundColor: ctx => ctx.raw >= TARGET ? GREEN : RED,
+          pointBorderColor:     ctx => ctx.raw >= TARGET ? GREEN : RED,
+          borderColor:'#22c55e', // fallback
+        },
+        {
+          label:'$26M Target',
+          data: Array(vals.length).fill(TARGET),
+          borderColor:'rgba(255,255,255,0.22)',
+          borderDash:[8,5],
+          borderWidth:1.5,
+          pointRadius:0,
+          fill:false,
+        }
+      ]
+    },
+    options: deepMerge(CHART_COMMON, {
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        tooltip:{
+          callbacks:{
+            title: items => WEEKLY_TREND[items[0].dataIndex].label,
+            label: item => {
+              if(item.datasetIndex===1) return null;
+              const v = item.raw;
+              const d = v - TARGET;
+              const sign = d>=0?'↑ +':'↓ ';
+              return [
+                ` Prediction: ${fmt(v)}`,
+                ` Delta: ${sign}${fmt(Math.abs(d))} vs $26M target`
+              ];
+            },
+            labelColor: item => {
+              if(item.datasetIndex===1) return null;
+              const v = item.raw;
+              const c = v>=TARGET?'#22c55e':'#FA5C5C';
+              return {borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:2};
+            }
+          }
+        }
+      },
+      scales:{
+        y:{
+          min: 24000000, max: 32000000,
+          ticks:{callback:v=>'$'+(v/1e6).toFixed(0)+'M'},
+          grid:{color:'rgba(255,255,255,0.04)'}
+        }
+      }
+    })
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB 1 — ALL LINES
+// ══════════════════════════════════════════════════════════════════
+const SERIES_CONFIG = [
+  {key:'avgVar',    color:'#0080FF', width:2.5, dash:[], label:'Predicted — Average Variances',     group:'predicted'},
+  {key:'forecastVar',color:'#CFC7D4',width:1.8, dash:[], label:'Predicted — Forecast Variances',   group:'predicted'},
+  {key:'rawVar',    color:'#7fc7ed', width:1.8, dash:[], label:'Predicted — Raw Variances',         group:'predicted'},
+  {key:'bookedVar', color:'#73F2E5', width:1.8, dash:[], label:'Predicted — Booked Variances',      group:'predicted'},
+  {key:'rbVar',     color:'#9484FF', width:1.8, dash:[], label:'Predicted — Raw+Booked Variances',  group:'predicted'},
+  {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Official Forecast / Budget',    group:'source'},
+  {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Raw Forecast',                  group:'source'},
+  {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Booked Projects',   group:'source'},
+];
+
+let chartAllLines;
+let seriesVisible = {};
+function initAllLines(){
+  SERIES_CONFIG.forEach(s => seriesVisible[s.key] = true);
+  const ctx = document.getElementById('chart-alllines').getContext('2d');
+
+  chartAllLines = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:MONTHS,
+      datasets: SERIES_CONFIG.map(s=>({
+        label: s.label,
+        data:  CURRENT_LINES[s.key].months,
+        borderColor: s.color,
+        borderWidth: s.width,
+        borderDash: s.dash,
+        pointRadius: 3,
+        pointHoverRadius:5,
+        pointBackgroundColor: s.color,
+        tension:0.3,
+        fill:false,
+      }))
+    },
+    options: deepMerge(CHART_COMMON, {
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        tooltip:{
+          callbacks:{
+            label: item => {
+              const total = CURRENT_LINES[SERIES_CONFIG[item.datasetIndex].key].total;
+              return ` ${item.dataset.label.replace('Predicted — ','')}: ${fmtK(item.raw)}  (${fmt(total)} annual)`;
+            }
+          }
+        }
+      }
+    })
+  });
+  buildLegend();
+}
+
+function buildLegend(){
+  const wrap = document.getElementById('legend-alllines');
+  wrap.innerHTML = '';
+
+  ['predicted','source'].forEach(grp=>{
+    const div = document.createElement('div');
+    div.className='legend-group';
+    const lbl = document.createElement('div');
+    lbl.className='legend-group-label';
+    lbl.textContent = grp==='predicted' ? 'Predicted (5 models)' : 'Source Lines';
+    div.appendChild(lbl);
+
+    SERIES_CONFIG.filter(s=>s.group===grp).forEach((s,i)=>{
+      const item = document.createElement('div');
+      item.className='legend-item';
+      item.setAttribute('data-key',s.key);
+
+      const dot = document.createElement('div');
+      dot.className = s.dash.length ? 'legend-dot dashed' : 'legend-dot';
+      if(s.dash.length){ dot.style.borderBottomColor=s.color; dot.style.height='0'; }
+      else { dot.style.background=s.color; }
+
+      const txt = document.createElement('span');
+      txt.className='legend-text';
+      txt.textContent = s.label;
+
+      item.appendChild(dot); item.appendChild(txt);
+      item.addEventListener('click', ()=>{
+        const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
+        const meta = chartAllLines.getDatasetMeta(idx);
+        meta.hidden = !meta.hidden;
+        item.classList.toggle('hidden');
+        chartAllLines.update();
+      });
+      div.appendChild(item);
+    });
+    wrap.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  ANIMATION DATA — all 5 prediction lines for each of 13 weeks
+// ══════════════════════════════════════════════════════════════════
+const ANIM_DATA = [
+  {label:'2025-12-31',short:'12/31',
+   forecastVar:{total:24170360,months:[2298763,2296624,2193957,1972358,1966531,1912546,1880683,1949636,1943245,1900791,1924232,1980972]},
+   rawVar:     {total:28392169,months:[2318402,2295274,2257224,2309817,2269380,2298931,2442054,2381728,2412882,2483667,2807808,3088494]},
+   bookedVar:  {total:31736069,months:[2265796,2327126,2326151,2416943,2534132,2547618,2989652,3169003,3236122,3547492,3862365,4250014]},
+   avgVar:     {total:29686138,months:[2294321,2306342,2259111,2233039,2256681,2253032,2437463,2500123,2530750,2643983,2864802,3106493]},
+   rbVar:      {total:32419038,months:[2292099,2311200,2291688,2363380,2401756,2423275,2715853,2775366,2824502,3015579,3335087,3669254]}},
+  {label:'2026-1-8',short:'1/8',
+   forecastVar:{total:24209752,months:[2233732,2300414,2178282,2048264,1997414,1916424,1880683,1949636,1943245,1900791,1924232,1980972]},
+   rawVar:     {total:28307501,months:[2301905,2270704,2270747,2328335,2258004,2326939,2493602,2361978,2374562,2467706,2773157,3054384]},
+   bookedVar:  {total:31216279,months:[2238346,2295399,2296524,2343136,2481360,2488573,2913212,3138126,3215074,3530600,3774343,4078571]},
+   avgVar:     {total:29443125,months:[2257994,2288839,2248517,2239912,2245593,2243978,2429166,2483247,2510960,2633032,2823911,3037976]},
+   rbVar:      {total:32037643,months:[2270126,2283052,2283635,2335735,2369682,2407756,2703407,2750052,2794818,2999153,3273750,3566478]}},
+  {label:'2026-1-15',short:'1/15',
+   forecastVar:{total:24292821,months:[2259035,2282388,2249506,2029990,1976825,1938451,1902300,1949636,1943246,1900790,1924232,1980972]},
+   rawVar:     {total:27882299,months:[2318585,2222066,2200375,2251666,2192520,2282731,2549946,2402146,2393863,2438751,2686120,2927992]},
+   bookedVar:  {total:31118034,months:[2273869,2272028,2310068,2361156,2493332,2548009,2931578,3074984,3112599,3400413,3649373,3967439]},
+   avgVar:     {total:29199660,months:[2283830,2258827,2253316,2214271,2220892,2256397,2461275,2475589,2483236,2579985,2753242,2958801]},
+   rbVar:      {total:31630805,months:[2296227,2247047,2255221,2306411,2342926,2415370,2740762,2738565,2753231,2919582,3167747,3447715]}},
+  {label:'2026-1-22',short:'1/22',
+   forecastVar:{total:24458955,months:[2278754,2287802,2283008,2063078,2027021,1946498,1917772,1957292,1943246,1900790,1924232,1980972]},
+   rawVar:     {total:27521365,months:[2301195,2270148,2284131,2313348,2201644,2259019,2409535,2169311,2265145,2347278,2544604,2797642]},
+   bookedVar:  {total:34705223,months:[2267431,2355953,2491647,2766821,2918720,3067458,3692272,3726317,3718370,3592598,3820837,4136938]},
+   avgVar:     {total:30409609,months:[2282460,2304634,2352929,2381082,2382462,2424325,2673193,2617640,2642253,2613555,2763224,2971850]},
+   rbVar:      {total:33359181,months:[2284313,2313050,2387889,2540084,2560182,2663239,3050903,2947814,2991757,2969938,3182720,3467290]}},
+  {label:'2026-1-29',short:'1/29',
+   forecastVar:{total:24538137,months:[2281204,2276316,2271364,2091557,2054779,1979198,1917772,1965212,1950887,1900790,1924232,1980972]},
+   rawVar:     {total:27248623,months:[2330853,2250248,2188170,2246444,2216912,2258267,2437268,2182673,2252610,2272604,2495301,2690974]},
+   bookedVar:  {total:33565617,months:[2286631,2333310,2425248,2603292,2800635,2876433,3425551,3580725,3534629,3548748,3806371,4042213]},
+   avgVar:     {total:29893465,months:[2299563,2286625,2294928,2313764,2357442,2371299,2593530,2576203,2579375,2574047,2741968,2904719]},
+   rbVar:      {total:32543055,months:[2308742,2291779,2306709,2424868,2508774,2567350,2931409,2881699,2893619,2910676,3150836,3366593]}},
+  {label:'2026-2-5',short:'2/5',
+   forecastVar:{total:24871656,months:[2291985,2284737,2248213,2179951,2105079,2019989,1969687,2009876,2003311,1907886,1924232,1980972]},
+   rawVar:     {total:27005071,months:[2327818,2294377,2249368,2260036,2205920,2203411,2345408,2093484,2205340,2223591,2457164,2639148]},
+   bookedVar:  {total:33568583,months:[2291985,2323451,2397230,2540848,2748086,2884472,3524626,3640877,3595264,3628212,3893778,4142226]},
+   avgVar:     {total:30014012,months:[2303929,2300855,2298270,2326945,2353028,2369291,2613240,2581412,2601305,2586563,2758391,2920782]},
+   rbVar:      {total:32558060,months:[2309901,2308914,2323299,2400442,2477003,2543942,2935017,2867181,2900302,2925902,3175471,3390687]}},
+  {label:'2026-2-12',short:'2/12',
+   forecastVar:{total:24503710,months:[2281437,2264808,2204018,2081947,2084421,1973629,1925916,1965212,1958793,1907886,1924232,1980972]},
+   rawVar:     {total:26832307,months:[2327818,2328126,2293434,2251491,2305476,2234192,2245656,2002944,2065006,2184283,2398555,2575026]},
+   bookedVar:  {total:32150820,months:[2291985,2320338,2373193,2463798,2587579,2715718,3149236,3124877,3130834,3614533,3877110,4165888]},
+   avgVar:     {total:29193455,months:[2300413,2304424,2290215,2265745,2325825,2307846,2440269,2364344,2384878,2568901,2733299,2907295]},
+   rbVar:      {total:31513547,months:[2309901,2324232,2333313,2357644,2446527,2474955,2697446,2563911,2597920,2899408,3137832,3370457]}},
+  {label:'2026-2-19',short:'2/19',
+   forecastVar:{total:24591311,months:[2281303,2227898,2235568,2157240,2061677,1950945,1939818,1980315,1973893,1915332,1931700,1988665]},
+   rawVar:     {total:26732508,months:[2326142,2333328,2217791,2220448,2275042,2165037,2146861,2134830,2262999,2250257,2329047,2407616]},
+   bookedVar:  {total:31817938,months:[2290309,2334903,2324973,2410797,2534216,2644031,3079811,3062841,3148922,3614533,3877110,4165888]},
+   avgVar:     {total:29067362,months:[2299251,2298710,2259444,2262828,2290312,2253337,2388830,2392662,2461938,2593374,2712619,2854056]},
+   rbVar:      {total:31278866,months:[2308225,2334116,2271382,2315622,2404629,2404534,2613336,2598836,2705961,2932395,3103079,3286752]}},
+  {label:'2026-2-26',short:'2/26',
+   forecastVar:{total:25400423,months:[2280430,2235808,2260697,2291716,2300458,2096888,1988831,2026595,2027250,1956248,1973837,2031064]},
+   rawVar:     {total:28194022,months:[2316133,2244060,2243196,2375713,2471952,2365873,2372086,2340877,2440914,2331298,2433120,2572663]},
+   bookedVar:  {total:31173624,months:[2280430,2240842,2274026,2389398,2459197,2510373,2910589,3033204,3172101,3557112,3826979,4184154]},
+   avgVar:     {total:29605371,months:[2292331,2240237,2259306,2352276,2410536,2324378,2423836,2466892,2546755,2614886,2744645,2929294]},
+   rbVar:      {total:31673146,months:[2298282,2242451,2258611,2382556,2465574,2438123,2641338,2687040,2806508,2944205,3130050,3378408]}},
+  {label:'2026-3-5',short:'3/5',
+   forecastVar:{total:25587467,months:[2280430,2234025,2272420,2328610,2354867,2167944,1995386,2034230,2027711,1963527,1979292,2037747]},
+   rawVar:     {total:28925634,months:[2316133,2234025,2292923,2446154,2612577,2505824,2508796,2387036,2505697,2410018,2442822,2561927]},
+   bookedVar:  {total:31524456,months:[2280430,2234025,2307415,2378826,2514705,2565209,2964794,3113398,3258440,3670275,3797061,4146866]},
+   avgVar:     {total:30043855,months:[2292331,2234025,2290919,2384530,2494050,2412993,2489659,2511555,2597282,2681273,2739725,2915513]},
+   rbVar:      {total:32227688,months:[2298282,2234025,2300169,2412490,2563641,2535517,2736795,2750217,2882068,3040147,3119941,3354397]}},
+  {label:'2026-3-12',short:'3/12',
+   forecastVar:{total:25821665,months:[2280430,2218606,2294292,2399757,2430367,2287087,1972213,2034230,2027711,1963527,1979292,2037747]},
+   rawVar:     {total:30055694,months:[2316133,2233606,2301581,2417501,2652132,2552789,2601529,2524747,2619885,2668423,2765813,2820545]},
+   bookedVar:  {total:30795204,months:[2280430,2233606,2280238,2272068,2393624,2426707,2909171,3040566,3177548,3635219,3755677,4103768]},
+   avgVar:     {total:30302855,months:[2292331,2228606,2292037,2363109,2492041,2422195,2494305,2533181,2608381,2755723,2833594,2987353]},
+   rbVar:      {total:32491653,months:[2298282,2233606,2290909,2344784,2522878,2489748,2755350,2782656,2898717,3151821,3260745,3462156]}},
+  {label:'2026-3-19',short:'3/19',
+   forecastVar:{total:27071527,months:[2280521,2218606,2272569,2392396,2421526,2397307,2135349,2214705,2210949,2159208,2176616,2232181]},
+   rawVar:     {total:28974710,months:[2272330,2218606,2308875,2392205,2651228,2527613,2451428,2296312,2397989,2511058,2527812,2609186]},
+   bookedVar:  {total:30564146,months:[2280521,2218606,2299758,2386566,2498858,2494236,2679503,2850589,2974266,3466273,3432348,3750722]},
+   avgVar:     {total:29869606,months:[2277791,2218606,2293734,2390389,2523871,2473052,2422094,2453869,2527734,2712179,2712258,2864030]},
+   rbVar:      {total:31248443,months:[2276426,2218606,2304316,2389385,2575043,2510924,2565466,2573451,2686127,2988665,2980080,3179954]}},
+  {label:'2026-3-26',short:'3/26',
+   forecastVar:{total:26882058,months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
+   rawVar:     {total:28673825,months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
+   bookedVar:  {total:30102572,months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
+   avgVar:     {total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+   rbVar:      {total:30553720,months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]}},
+];
+
+// Series config — matches All Lines colors exactly
+const ANIM_SERIES = [
+  {key:'forecastVar',color:'#CFC7D4',label:'Forecast Variances',  width:1.8},
+  {key:'rawVar',     color:'#7fc7ed',label:'Raw Variances',        width:1.8},
+  {key:'bookedVar',  color:'#73F2E5',label:'Booked Variances',     width:1.8},
+  {key:'avgVar',     color:'#0080FF',label:'Average Variances',    width:2.8},
+  {key:'rbVar',      color:'#9484FF',label:'Raw+Booked Variances', width:1.8},
+];
+
+// ── ANIMATION CHART
+let chartAnim, animFrame=12, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
+
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function buildWeekPills(){
+  const wrap = document.getElementById('week-pills');
+  wrap.innerHTML='';
+  ANIM_DATA.forEach((w,i)=>{
+    const btn = document.createElement('button');
+    btn.className='week-pill'+(i===animFrame?' active':'');
+    btn.textContent=w.short;
+    btn.onclick=()=>{ animFrame=i; updateAnimChart(); updatePills(); updateScrubber(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function updatePills(){
+  document.querySelectorAll('.week-pill').forEach((p,i)=>p.classList.toggle('active',i===animFrame));
+}
+function updateScrubber(){
+  document.getElementById('week-scrubber').value=animFrame;
+  document.getElementById('scrubber-label').textContent=ANIM_DATA[animFrame].short;
+}
+
+function ghostDatasets(){
+  const ghosts=[];
+  const max=ghostCount===0?0:ghostCount===99?animFrame:Math.min(ghostCount,animFrame);
+  for(let g=1;g<=max;g++){
+    const idx=animFrame-g;
+    if(idx<0) continue;
+    const op=g===1?0.30:g===2?0.17:g===3?0.10:g<=5?0.06:0.03;
+    const w=ANIM_DATA[idx];
+    ANIM_SERIES.forEach(s=>{
+      ghosts.push({
+        label:`_g_${idx}_${s.key}`,
+        data:w[s.key].months,
+        borderColor:hexToRgba(s.color,op),
+        borderWidth:1.2,
+        borderDash:[4,4],
+        pointRadius:0,tension:0.3,fill:false,
+      });
+    });
+  }
+  return ghosts;
+}
+
+function updateAnimChart(){
+  if(!chartAnim) return;
+  const w=ANIM_DATA[animFrame];
+  const current=ANIM_SERIES.map(s=>({
+    label:s.label,
+    data:w[s.key].months,
+    borderColor:s.color,borderWidth:s.width,
+    pointRadius:s.key==='avgVar'?5:3,
+    pointBackgroundColor:s.color,
+    tension:0.3,fill:false,
+  }));
+  chartAnim.data.datasets=[...ghostDatasets(),...current];
+  const pred=w.avgVar.total, d=pred-TARGET;
+  chartAnim.options.plugins.title={
+    display:true,
+    text:`Week: ${w.label}  ·  Avg Variance: ${fmt(pred)}  ·  ${d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below'} $26M target`,
+    color:pred>=TARGET?'#22c55e':'#FA5C5C',
+    font:{family:'Raleway',size:12,weight:'700'},padding:{bottom:10}
+  };
+  chartAnim.update('none');
+}
+
+function initAnimation(){
+  const ctx=document.getElementById('chart-animation').getContext('2d');
+  chartAnim=new Chart(ctx,{
+    type:'line',
+    data:{labels:MONTHS,datasets:[]},
+    options:deepMerge(CHART_COMMON,{
+      animation:{duration:180},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:true,position:'top',
+          labels:{
+            color:'#CFC7D4',font:{family:'Raleway',size:11},
+            boxWidth:22,boxHeight:2,padding:14,
+            filter:item=>!item.text.startsWith('_'),
+          }
+        },
+        tooltip:{
+          filter: item => !item.dataset.label.startsWith('_'),
+          callbacks:{
+            title: items => MONTHS[items[0].dataIndex],
+            label: item => ` ${item.dataset.label}: ${fmtK(item.raw)}`,
+          }
+        }
+      },
+      scales:{
+        y:{min:1400000,max:4500000}
+      }
+    })
+  });
+  buildWeekPills();
+  updateAnimChart();
+
+  document.getElementById('week-scrubber').addEventListener('input',e=>{
+    animFrame=parseInt(e.target.value);
+    updateAnimChart();updatePills();
+    document.getElementById('scrubber-label').textContent=ANIM_DATA[animFrame].short;
+  });
+  document.querySelectorAll('#speed-pills .ctrl-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#speed-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      animSpeed=parseFloat(btn.dataset.speed);
+      if(animPlaying){clearInterval(animTimer);startAnim();}
+    });
+  });
+  document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      ghostCount=parseInt(btn.dataset.ghost);
+      updateAnimChart();
+    });
+  });
+}
+
+function togglePlay(){
+  animPlaying=!animPlaying;
+  document.getElementById('play-btn').textContent=animPlaying?'⏸':'▶';
+  if(animPlaying){if(animFrame===ANIM_DATA.length-1)animFrame=0;startAnim();}
+  else clearInterval(animTimer);
+}
+
+function startAnim(){
+  clearInterval(animTimer);
+  const delay=Math.round(1000/animSpeed);
+  animTimer=setInterval(()=>{
+    animFrame=(animFrame+1)%ANIM_DATA.length;
+    updateAnimChart();updatePills();updateScrubber();
+    if(animFrame===ANIM_DATA.length-1){clearInterval(animTimer);animPlaying=false;document.getElementById('play-btn').textContent='▶';}
+  },delay);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB 3 — YEAR OVER YEAR
+// ══════════════════════════════════════════════════════════════════
+let chartYoY;
+function initYoY(){
+  const ctx = document.getElementById('chart-yoy').getContext('2d');
+  const years = [2022,2023,2024,2025];
+
+  const datasets = years.map(y=>({
+    label: String(y),
+    data: YOY[y].months,
+    borderColor: YOY[y].color,
+    borderWidth: 1.8,
+    pointRadius: 3,
+    pointBackgroundColor: YOY[y].color,
+    tension:0.3, fill:false,
+  }));
+
+  // 2026 prediction (dashed)
+  datasets.push({
+    label:'2026 (avg variance prediction)',
+    data: CURRENT_LINES.avgVar.months,
+    borderColor:'#0080FF',
+    borderWidth:2.2,
+    borderDash:[7,4],
+    pointRadius:4,
+    pointBackgroundColor:'#0080FF',
+    tension:0.3, fill:false,
+  });
+
+  chartYoY = new Chart(ctx, {
+    type:'line',
+    data:{labels:MONTHS, datasets},
+    options: deepMerge(CHART_COMMON, {
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:true,
+          position:'top',
+          labels:{color:'#CFC7D4',font:{family:'Raleway',size:11},boxWidth:24,boxHeight:2,padding:16}
+        }
+      }
+    })
+  });
+
+  buildYoYCards();
+}
+
+function buildYoYCards(){
+  const wrap = document.getElementById('yoy-cards');
+  const maxTotal = Math.max(...[2022,2023,2024,2025].map(y=>YOY[y].total), CURRENT_LINES.avgVar.total);
+  const entries = [
+    ...Object.entries(YOY).map(([y,d])=>({year:y,total:d.total,color:d.color,label:'Actual',months:d.months})),
+    {year:'2026',total:CURRENT_LINES.avgVar.total,color:'#0080FF',label:'Prediction',months:CURRENT_LINES.avgVar.months}
+  ];
+  entries.forEach(e=>{
+    const card = document.createElement('div');
+    card.className='yoy-card';
+    card.innerHTML=`
+      <div class="yc-year" style="color:${e.color}">${e.year} <span style="color:#666;font-size:9px">${e.label}</span></div>
+      <div class="yc-total" style="color:${e.color}">${fmt(e.total)}</div>
+      <div class="yc-avg">avg ${fmtK(e.total/12)}/mo</div>
+      <div class="yoy-bar-track"><div class="yoy-bar-fill" style="background:${e.color};width:${Math.round(e.total/maxTotal*100)}%"></div></div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB 4 — VARIANCE DETAIL
+// ══════════════════════════════════════════════════════════════════
+let chartVar;
+function initVariance(){
+  const ctx = document.getElementById('chart-variance').getContext('2d');
+  chartVar = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'Forecast Variance %',data:VAR_AVGS.forecast,borderColor:'#CFC7D4',borderWidth:2,pointRadius:4,pointBackgroundColor:'#CFC7D4',tension:0.3,fill:false},
+        {label:'Raw Variance %',     data:VAR_AVGS.raw,     borderColor:'#7fc7ed',borderWidth:2,pointRadius:4,pointBackgroundColor:'#7fc7ed',tension:0.3,fill:false},
+        {label:'Booked Variance %',  data:VAR_AVGS.booked,  borderColor:'#73F2E5',borderWidth:2,pointRadius:4,pointBackgroundColor:'#73F2E5',tension:0.3,fill:false},
+      ]
+    },
+    options: deepMerge(CHART_COMMON, {
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:true,position:'top',
+          labels:{color:'#CFC7D4',font:{family:'Raleway',size:11},boxWidth:20,boxHeight:2,padding:14}
+        },
+        tooltip:{
+          callbacks:{
+            label: item => ` ${item.dataset.label}: ${item.raw>0?'+':''}${item.raw.toFixed(2)}%`
+          }
+        }
+      },
+      scales:{
+        y:{
+          ticks:{callback:v=>{
+            if(Math.abs(v)<10) return v.toFixed(1)+'%';
+            return Math.round(v)+'%';
+          }},
+          grid:{color:'rgba(255,255,255,0.04)'}
+        }
+      }
+    })
+  });
+  buildVarTable();
+}
+
+function varCellClass(val){
+  if(Math.abs(val)<0.1) return 'vc-zero';
+  if(val<0) return val<-5?'vc-neg-hi':val<-1?'vc-neg-md':'vc-neg-lo';
+  return val>30?'vc-pos-hi':val>5?'vc-pos-md':'vc-pos-lo';
+}
+
+function buildVarTable(){
+  const tbl = document.getElementById('var-table');
+  // Header
+  tbl.innerHTML=`<thead><tr>
+    <th>Variance Type</th>${MONTHS.map(m=>`<th>${m}</th>`).join('')}<th>Avg</th>
+  </tr></thead>`;
+  const rows = [
+    {label:'Forecast Var %', data:VAR_AVGS.forecast, color:'#CFC7D4'},
+    {label:'Raw Var %',      data:VAR_AVGS.raw,      color:'#7fc7ed'},
+    {label:'Booked Var %',   data:VAR_AVGS.booked,   color:'#73F2E5'},
+  ];
+  const tbody = document.createElement('tbody');
+  rows.forEach(row=>{
+    const tr = document.createElement('tr');
+    const avg = row.data.reduce((a,b)=>a+b,0)/row.data.length;
+    tr.innerHTML=`<td style="color:${row.color}">${row.label}</td>`
+      + row.data.map(v=>`<td class="${varCellClass(v)}">${v>0?'+':''}${v.toFixed(2)}%</td>`).join('')
+      + `<td class="${varCellClass(avg)}" style="font-weight:800">${avg>0?'+':''}${avg.toFixed(2)}%</td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  HEADER / BANNER UPDATE
+// ══════════════════════════════════════════════════════════════════
+function updateHeader(){
+  const latest = WEEKLY_TREND[WEEKLY_TREND.length-1];
+  const pred   = CURRENT_LINES.avgVar.total;
+  const floor  = CURRENT_LINES.forecastVar.total;
+  const ceil   = CURRENT_LINES.rbVar.total;
+  const ontrack = pred >= TARGET;
+
+  document.getElementById('hdr-weeks').textContent = WEEKLY_TREND.length;
+  document.getElementById('hdr-week').textContent  = latest.label;
+
+  // Banner
+  const banner = document.getElementById('main-banner');
+  banner.className = 'banner '+(ontrack?'green':'red');
+  banner.querySelector('.banner-status-tag').textContent = ontrack?'✓ ON TRACK':'✗ BELOW TARGET';
+  document.getElementById('banner-week-label').textContent = `As of week ${latest.label}`;
+  document.getElementById('banner-prediction').textContent = fmt(pred);
+  const d = pred - TARGET;
+  document.getElementById('banner-delta').textContent = d>=0?`↑ +${fmt(d)} above target`:`↓ ${fmt(Math.abs(d))} below target`;
+
+  // Cards
+  document.getElementById('mc-week').textContent  = latest.label;
+  document.getElementById('mc-avg').textContent     = fmt(pred);
+  document.getElementById('mc-floor').textContent   = fmt(floor);
+  document.getElementById('mc-ceiling').textContent = fmt(ceil);
+  // color
+  const avgEl = document.getElementById('mc-avg');
+  avgEl.className = 'mc-value '+(ontrack?'green':'coral');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ══════════════════════════════════════════════════════════════════
+let chartsInited = {0:false,1:false,2:false,3:false,4:false};
+function initTab(t){
+  if(chartsInited[t]) return;
+  chartsInited[t]=true;
+  if(t===0) initTrend();
+  if(t===1) initAllLines();
+  if(t===2) initAnimation();
+  if(t===3) initYoY();
+  if(t===4) initVariance();
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const t = parseInt(btn.dataset.tab);
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+t).classList.add('active');
+    // Stop animation if leaving tab 2
+    if(animPlaying && t!==2){ clearInterval(animTimer); animPlaying=false; const pb=document.getElementById('play-btn'); if(pb) pb.textContent='▶'; }
+    setTimeout(()=>initTab(t), 30);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  LIVE DATA REFRESH
+// ══════════════════════════════════════════════════════════════════
+const TREND_GID   = '967109386';
+const CURRENT_GID = '980058400'; // "Current" sheet
+
+function parseMoney(s){
+  if(!s) return 0;
+  return parseInt(String(s).replace(/[$, ]/g,'')) || 0;
+}
+function parsePct(s){
+  if(!s) return 0;
+  return parseFloat(String(s).replace('%','')) || 0;
+}
+
+async function fetchGviz(gid, range){
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}&range=${encodeURIComponent(range)}&headers=0`;
+  const resp = await fetch(url, {cache:'no-store'});
+  const text = await resp.text();
+  const json = JSON.parse(text.slice(text.indexOf('\n')+1, text.lastIndexOf(')')));
+  return json.table.rows.map(row => row.c.map(cell => cell ? (cell.f !== undefined && cell.f !== null ? cell.f : cell.v) : null));
+}
+
+async function fetchBySheetName(name, range){
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}&range=${encodeURIComponent(range)}&headers=0`;
+  const resp = await fetch(url, {cache:'no-store'});
+  const text = await resp.text();
+  const json = JSON.parse(text.slice(text.indexOf('\n')+1, text.lastIndexOf(')')));
+  return json.table.rows.map(row => row.c.map(cell => cell ? (cell.f !== undefined && cell.f !== null ? cell.f : cell.v) : null));
+}
+
+async function liveRefresh(){
+  const btn = document.querySelector('.refresh-btn');
+  btn.classList.add('loading');
+  btn.querySelector('.spin').textContent='↻';
+  document.getElementById('status-msg').textContent='Fetching live data from Google Sheets…';
+  try {
+    // ── Fetch Trend tab (P1:AC100)
+    const trendRows = await fetchGviz(TREND_GID, 'P1:AC100');
+    // Row 0 = header "Auto - Blanks Removed for Chart"
+    // Row 1 = column headers (Week, Jan … Dec, Total)
+    // Rows 2+ = data rows
+    const dataRows = trendRows.filter((r,i)=>i>=2 && r[0] && r[0]!=='Week' && String(r[0]).trim()!=='');
+    if(dataRows.length > 0){
+      WEEKLY_TREND = dataRows.map(r=>({
+        label: String(r[0]).trim(),
+        short: String(r[0]).trim().replace('2026-','').replace('2025-',''),
+        total: parseMoney(r[13]),
+        months: [1,2,3,4,5,6,7,8,9,10,11,12].map(i=>parseMoney(r[i]))
+      })).filter(w=>w.total>0 && w.label !== 'Current');
+
+      // ── Find latest weekly tab name
+      const latestLabel = WEEKLY_TREND[WEEKLY_TREND.length-1].label;
+
+      // ── Fetch latest weekly tab rows 35-80 for source + predictions
+      const weekRows = await fetchBySheetName(latestLabel, 'A1:Z85');
+
+      // Rows 35-37 (0-indexed: 34-36): Official Forecast, Raw Forecast, Booked
+      // Rows 76-80 (0-indexed: 75-79): 5 prediction lines
+      const parseRow = (rows, idx) => ({
+        months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
+        total:  parseMoney(rows[idx]?.[16])
+      });
+      const parseRowLabel = (rows, idx) => String(rows[idx]?.[3]||'');
+
+      if(weekRows.length>=80){
+        CURRENT_LINES.offFcst  = {...CURRENT_LINES.offFcst, ...parseRow(weekRows,34)};
+        CURRENT_LINES.rawFcst  = {...CURRENT_LINES.rawFcst,  ...parseRow(weekRows,35)};
+        CURRENT_LINES.bookedProj={...CURRENT_LINES.bookedProj,...parseRow(weekRows,36)};
+        CURRENT_LINES.forecastVar={...CURRENT_LINES.forecastVar,...parseRow(weekRows,75)};
+        CURRENT_LINES.rawVar   = {...CURRENT_LINES.rawVar,   ...parseRow(weekRows,76)};
+        CURRENT_LINES.bookedVar= {...CURRENT_LINES.bookedVar, ...parseRow(weekRows,77)};
+        CURRENT_LINES.avgVar   = {...CURRENT_LINES.avgVar,   ...parseRow(weekRows,78)};
+        CURRENT_LINES.rbVar    = {...CURRENT_LINES.rbVar,    ...parseRow(weekRows,79)};
+
+        // Variance averages rows 72-74 (0-indexed: 71-73)
+        if(weekRows.length>=75){
+          // Sheet rows 73-75 (0-indexed 72-74) = Forecast/Raw/Booked variance averages
+          VAR_AVGS.forecast = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[72]?.[c]));
+          VAR_AVGS.raw      = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[73]?.[c]));
+          VAR_AVGS.booked   = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[74]?.[c]));
+        }
+      }
+
+      // Rebuild all charts
+      updateHeader();
+      rebuildAllCharts();
+
+      const now = new Date();
+      document.getElementById('data-ts').textContent = `Live · ${now.toLocaleTimeString()}`;
+      document.getElementById('status-msg').innerHTML = `Live data loaded (${WEEKLY_TREND.length} weeks) · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      document.getElementById('status-dot').className='status-dot ok';
+    }
+  } catch(e){
+    console.warn('Live fetch failed:', e);
+    document.getElementById('status-msg').innerHTML = `Refresh failed (CORS or network) — showing embedded data · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Sheet ↗</a>`;
+    document.getElementById('status-dot').className='status-dot';
+  } finally {
+    btn.classList.remove('loading');
+    btn.querySelector('.spin').textContent='↻';
+  }
+}
+
+function rebuildAllCharts(){
+  // Destroy and re-init all active charts
+  [chartTrend, chartAllLines, chartAnim, chartYoY, chartVar].forEach(c=>{ try{ if(c) c.destroy(); }catch(e){} });
+  chartTrend=chartAllLines=chartAnim=chartYoY=chartVar=null;
+  chartsInited={0:false,1:false,2:false,3:false,4:false};
+  animFrame=ANIM_DATA.length-1; animPlaying=false;
+  // Re-init currently visible tab
+  const activeTab = parseInt(document.querySelector('.tab-btn.active').dataset.tab);
+  initTab(activeTab);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
+updateHeader();
+initTab(0);
+
+// Auto-refresh on load (attempt live data)
+setTimeout(liveRefresh, 800);
+</script>
+</body>
+</html>
