@@ -1092,7 +1092,7 @@ async function fetchGviz(gid, range){
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}&range=${encodeURIComponent(range)}&headers=0`;
   const resp = await fetch(url, {cache:'no-store'});
   const text = await resp.text();
-  const json = JSON.parse(text.slice(text.indexOf('\n')+1, text.lastIndexOf(')')));
+ const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf(')')));
   return json.table.rows.map(row => row.c.map(cell => cell ? (cell.f !== undefined && cell.f !== null ? cell.f : cell.v) : null));
 }
 
@@ -1100,7 +1100,7 @@ async function fetchBySheetName(name, range){
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}&range=${encodeURIComponent(range)}&headers=0`;
   const resp = await fetch(url, {cache:'no-store'});
   const text = await resp.text();
-  const json = JSON.parse(text.slice(text.indexOf('\n')+1, text.lastIndexOf(')')));
+const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf(')')));
   return json.table.rows.map(row => row.c.map(cell => cell ? (cell.f !== undefined && cell.f !== null ? cell.f : cell.v) : null));
 }
 
