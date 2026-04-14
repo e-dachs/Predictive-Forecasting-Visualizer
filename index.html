@@ -979,16 +979,15 @@ async function liveRefresh(){
         months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
         total:  parseMoney(rows[idx]?.[16])
       });
-      if(weekRows.length>=80){
-        CURRENT_LINES.offFcst   = {...CURRENT_LINES.offFcst,   ...parseRow(weekRows,34)};
-        CURRENT_LINES.rawFcst   = {...CURRENT_LINES.rawFcst,   ...parseRow(weekRows,35)};
-        CURRENT_LINES.bookedProj= {...CURRENT_LINES.bookedProj,...parseRow(weekRows,36)};
-        CURRENT_LINES.forecastVar={...CURRENT_LINES.forecastVar,...parseRow(weekRows,75)};
-        CURRENT_LINES.rawVar    = {...CURRENT_LINES.rawVar,    ...parseRow(weekRows,76)};
-        CURRENT_LINES.bookedVar = {...CURRENT_LINES.bookedVar, ...parseRow(weekRows,77)};
-        CURRENT_LINES.avgVar    = {...CURRENT_LINES.avgVar,    ...parseRow(weekRows,78)};
-        CURRENT_LINES.rbVar     = {...CURRENT_LINES.rbVar,     ...parseRow(weekRows,79)};
-      }
+      // Update CURRENT_LINES from whatever rows we got — no hard minimum
+      CURRENT_LINES.offFcst   = {...CURRENT_LINES.offFcst,   ...parseRow(weekRows,34)};
+      CURRENT_LINES.rawFcst   = {...CURRENT_LINES.rawFcst,   ...parseRow(weekRows,35)};
+      CURRENT_LINES.bookedProj= {...CURRENT_LINES.bookedProj,...parseRow(weekRows,36)};
+      CURRENT_LINES.forecastVar={...CURRENT_LINES.forecastVar,...parseRow(weekRows,75)};
+      CURRENT_LINES.rawVar    = {...CURRENT_LINES.rawVar,    ...parseRow(weekRows,76)};
+      CURRENT_LINES.bookedVar = {...CURRENT_LINES.bookedVar, ...parseRow(weekRows,77)};
+      CURRENT_LINES.avgVar    = {...CURRENT_LINES.avgVar,    ...parseRow(weekRows,78)};
+      CURRENT_LINES.rbVar     = {...CURRENT_LINES.rbVar,     ...parseRow(weekRows,79)};
 
       // ── 3. Fetch ALL weekly tabs to build a complete ANIM_DATA
       //    Each weekly tab has the 5 prediction rows at indices 75-79 (same layout).
@@ -997,7 +996,7 @@ async function liveRefresh(){
         WEEKLY_TREND.map(async w => {
           try {
             const rows = await fetchBySheetName(w.label, 'A1:Z85');
-            if(rows.length < 80) return null;
+            if(rows.length < 36) return null; // need at least through row 36 for source lines
             const pr = (idx) => ({
               months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
               total:  parseMoney(rows[idx]?.[16])
@@ -1024,7 +1023,7 @@ async function liveRefresh(){
 
       const now = new Date();
       document.getElementById('data-ts').textContent = `Live · ${now.toLocaleTimeString()}`;
-      document.getElementById('status-msg').innerHTML = `Live data loaded (${WEEKLY_TREND.length} weeks) · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      document.getElementById('status-msg').innerHTML = `Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows fetched: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   } catch(e){
