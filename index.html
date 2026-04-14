@@ -38,50 +38,23 @@ header{
   0%,100%{transform:scale(1);box-shadow:0 0 8px rgba(34,197,94,0.6);}
   50%{transform:scale(1.3);box-shadow:0 0 16px rgba(34,197,94,0.9);}
 }
-.live-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);}
-h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
+.live-label{font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--green);}
+h1{font-size:19px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .hdr-stats{display:flex;align-items:center;gap:24px;flex:1;justify-content:center;flex-wrap:wrap;}
 .hdr-stat{text-align:center;}
-.hdr-stat .num{font-size:20px;font-weight:800;color:var(--white);display:block;line-height:1.1;}
-.hdr-stat .lbl{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;}
+.hdr-stat .num{font-size:22px;font-weight:800;color:var(--white);display:block;line-height:1.1;}
+.hdr-stat .lbl{font-size:12px;font-weight:500;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;}
 .hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .refresh-btn{
   background:transparent;border:1px solid var(--border);color:var(--text2);
   padding:7px 14px;border-radius:8px;font-family:'Raleway',sans-serif;
-  font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
   display:flex;align-items:center;gap:6px;
 }
 .refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
 .refresh-btn.loading .spin{animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.data-ts{font-size:10px;color:var(--text3);white-space:nowrap;}
-
-/* ── BANNER ── */
-.banner{
-  margin:20px 28px 0;border-radius:14px;padding:20px 28px;
-  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
-  transition:background 0.4s;
-}
-.banner.green{background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(34,197,94,0.08));border:1px solid rgba(34,197,94,0.35);}
-.banner.red{background:linear-gradient(135deg,rgba(250,92,92,0.18),rgba(250,92,92,0.08));border:1px solid rgba(250,92,92,0.35);}
-.banner-status-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;
-}
-.banner.green .banner-status-tag{background:rgba(34,197,94,0.2);color:var(--green);}
-.banner.red .banner-status-tag{background:rgba(250,92,92,0.2);color:var(--coral);}
-.banner-left{display:flex;flex-direction:column;gap:6px;min-width:140px;}
-.banner-week{font-size:11px;color:var(--text2);}
-.banner-center{flex:1;text-align:center;}
-.banner-big{font-size:42px;font-weight:900;line-height:1;letter-spacing:-1px;}
-.banner.green .banner-big{color:var(--green);}
-.banner.red .banner-big{color:var(--coral);}
-.banner-sub{font-size:11px;color:var(--text2);margin-top:4px;font-weight:500;}
-.banner-right{text-align:right;}
-.banner-delta{font-size:16px;font-weight:700;}
-.banner.green .banner-delta{color:var(--green);}
-.banner.red .banner-delta{color:var(--coral);}
-.banner-target{font-size:11px;color:var(--text3);margin-top:2px;}
+.data-ts{font-size:12px;color:var(--text3);white-space:nowrap;}
 
 /* ── METRIC CARDS ── */
 .cards-row{
@@ -95,9 +68,9 @@ h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   padding:16px 18px;transition:border-color 0.2s;
 }
 .metric-card.hero{border-color:rgba(0,128,255,0.4);background:linear-gradient(135deg,rgba(0,128,255,0.12),rgba(0,128,255,0.04));}
-.metric-card .mc-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
-.metric-card .mc-value{font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
-.metric-card .mc-sub{font-size:10px;color:var(--text3);margin-top:4px;font-weight:500;}
+.metric-card .mc-label{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+.metric-card .mc-value{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
+.metric-card .mc-sub{font-size:12px;color:var(--text3);margin-top:4px;font-weight:500;}
 .mc-value.green{color:var(--green);}
 .mc-value.blue{color:var(--blue);}
 .mc-value.coral{color:var(--coral);}
@@ -112,7 +85,7 @@ h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .tab-btn{
   background:none;border:none;border-bottom:2px solid transparent;
   color:var(--text3);padding:11px 20px;font-family:'Raleway',sans-serif;
-  font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;
   white-space:nowrap;margin-bottom:-1px;letter-spacing:0.2px;
 }
 .tab-btn:hover{color:var(--text2);}
@@ -123,11 +96,11 @@ h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .tab-panel.active{display:block;}
 .chart-wrap{position:relative;height:380px;width:100%;padding:0 28px;}
 .chart-wrap.short{height:320px;}
-.section-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 28px;margin-bottom:14px;}
+.section-title{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 28px;margin-bottom:14px;}
 
 /* ── CUSTOM LEGEND (Tab 2) ── */
 .legend-wrap{padding:16px 28px;display:flex;gap:32px;flex-wrap:wrap;}
-.legend-group-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.legend-group-label{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
 .legend-group{display:flex;flex-direction:column;gap:4px;}
 .legend-item{
   display:flex;align-items:center;gap:8px;cursor:pointer;
@@ -138,7 +111,7 @@ h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .legend-item.hidden{opacity:0.35;}
 .legend-dot{width:28px;height:3px;border-radius:2px;flex-shrink:0;}
 .legend-dot.dashed{background:none;border-bottom:2px dashed;}
-.legend-text{font-size:11px;font-weight:600;color:var(--text2);}
+.legend-text{font-size:13px;font-weight:600;color:var(--text2);}
 
 /* ── ANIMATION CONTROLS ── */
 .anim-controls{
@@ -184,31 +157,11 @@ h1{font-size:17px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .yoy-bar-track{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:10px;overflow:hidden;}
 .yoy-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
 
-/* ── VARIANCE TABLE ── */
-.var-table-wrap{padding:16px 28px 28px;overflow-x:auto;}
-table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
-.var-table th{
-  padding:8px 10px;text-align:center;font-weight:700;color:var(--text3);
-  letter-spacing:0.5px;font-size:10px;text-transform:uppercase;
-  border-bottom:1px solid var(--border);
-}
-.var-table th:first-child{text-align:left;}
-.var-table td{padding:9px 10px;text-align:center;font-weight:600;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.04);}
-.var-table td:first-child{text-align:left;font-size:10px;color:var(--text2);font-weight:700;letter-spacing:0.3px;}
-.var-table tr:hover td{background:rgba(255,255,255,0.025);}
-.vc-neg-lo{background:rgba(250,92,92,0.08);color:#f87171;}
-.vc-neg-md{background:rgba(250,92,92,0.18);color:#fc8181;}
-.vc-neg-hi{background:rgba(250,92,92,0.32);color:#FA5C5C;}
-.vc-pos-lo{background:rgba(34,197,94,0.08);color:#6ee7b7;}
-.vc-pos-md{background:rgba(34,197,94,0.18);color:#4ade80;}
-.vc-pos-hi{background:rgba(34,197,94,0.32);color:#22c55e;}
-.vc-zero{color:var(--text3);}
-
 /* ── MISC ── */
 .divider{height:1px;background:var(--border);margin:16px 0;}
 .status-bar{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px;font-size:11px;color:var(--text3);
+  padding:12px;font-size:13px;color:var(--text3);
 }
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
 .status-dot.ok{background:var(--green);}
@@ -235,7 +188,7 @@ table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
       <span class="lbl">years in model</span>
     </div>
     <div class="hdr-stat">
-      <span class="num" id="hdr-week">2026-3-26</span>
+      <span class="num" id="hdr-week">2026-4-2</span>
       <span class="lbl">latest week</span>
     </div>
   </div>
@@ -247,77 +200,53 @@ table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
   </div>
 </header>
 
-<!-- ═══════════════════════════════ BANNER ═══════════════════════════════ -->
-<div class="banner green" id="main-banner">
-  <div class="banner-left">
-    <span class="banner-status-tag">✓ ON TRACK</span>
-    <span class="banner-week" id="banner-week-label">As of week 2026-3-26</span>
-  </div>
-  <div class="banner-center">
-    <div class="banner-big" id="banner-prediction">$29.34M</div>
-    <div class="banner-sub">Average Variance Prediction</div>
-  </div>
-  <div class="banner-right">
-    <div class="banner-delta" id="banner-delta">↑ +$3.34M above target</div>
-    <div class="banner-target">vs. $26M annual target</div>
-  </div>
-</div>
-
 <!-- ══════════════════════════ METRIC CARDS ══════════════════════════════ -->
 <div class="cards-row">
   <div class="metric-card">
     <div class="mc-label">Current Week</div>
-    <div class="mc-value blue" id="mc-week" style="font-size:20px;">2026-3-26</div>
-    <div class="mc-sub">latest data snapshot</div>
+    <div class="mc-value blue" id="mc-week" style="font-size:22px;">2026-4-2</div>
+    <div class="mc-sub">Latest data snapshot</div>
   </div>
   <div class="metric-card hero">
-    <div class="mc-label">Avg Variance Prediction</div>
+    <div class="mc-label">Current Yearly Prediction</div>
     <div class="mc-value green" id="mc-avg">$29.34M</div>
-    <div class="mc-sub">midpoint of 3 variance models</div>
+    <div class="mc-sub">Combined Variances Model</div>
   </div>
   <div class="metric-card">
     <div class="mc-label">Conservative Floor</div>
     <div class="mc-value" id="mc-floor" style="color:var(--notgray);">$26.88M</div>
-    <div class="mc-sub">forecast variances model</div>
+    <div class="mc-sub">Official Forecast Variances Model</div>
   </div>
   <div class="metric-card">
     <div class="mc-label">Optimistic Ceiling</div>
     <div class="mc-value" id="mc-ceiling" style="color:var(--violet);">$30.55M</div>
-    <div class="mc-sub">raw + booked variances model</div>
+    <div class="mc-sub">Raw &amp; Booked Variances Model</div>
   </div>
 </div>
 
 <!-- ══════════════════════════════ TABS ══════════════════════════════════ -->
 <div class="tabs-wrap">
   <nav class="tabs-nav">
-    <button class="tab-btn active" data-tab="0">Weekly Trend</button>
-    <button class="tab-btn" data-tab="1">All Lines</button>
-    <button class="tab-btn" data-tab="2">Animation</button>
-    <button class="tab-btn" data-tab="3">Year Over Year</button>
-    <button class="tab-btn" data-tab="4">Variance Detail</button>
+    <button class="tab-btn active" data-tab="0">Yearly Forecast by Week</button>
+    <button class="tab-btn" data-tab="1">Current Monthly View — All Models</button>
+    <button class="tab-btn" data-tab="3">Monthly Year Over Year</button>
   </nav>
 
-  <!-- ─── TAB 0: Weekly Trend ─── -->
+  <!-- ─── TAB 0: Yearly Forecast by Week ─── -->
   <div class="tab-panel active" id="panel-0">
-    <p style="padding:0 28px 14px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.3px;">
-      Predicted from Average Variances &mdash; annual revenue total tracked week by week &nbsp;&middot;&nbsp; Dashed line = $26M target
+    <p style="padding:0 28px 14px;font-size:12px;color:#888;font-weight:600;letter-spacing:0.3px;">
+      Predicted from Combined Variances Model &mdash; annual revenue total tracked week by week &nbsp;&middot;&nbsp; Dashed line = $26M target
     </p>
     <div class="chart-wrap">
       <canvas id="chart-trend"></canvas>
     </div>
   </div>
 
-  <!-- ─── TAB 1: All Lines ─── -->
+  <!-- ─── TAB 1: Current Monthly View — All Models (with optional animation) ─── -->
   <div class="tab-panel" id="panel-1">
     <div id="legend-alllines" class="legend-wrap"></div>
-    <div class="chart-wrap">
-      <canvas id="chart-alllines"></canvas>
-    </div>
-  </div>
-
-  <!-- ─── TAB 2: Animation ─── -->
-  <div class="tab-panel" id="panel-2">
-    <div class="anim-controls">
+    <!-- Animation controls, hidden by default -->
+    <div class="anim-controls" id="anim-controls-bar" style="display:none;">
       <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
       <div class="speed-group">
         <span class="ctrl-label">Speed</span>
@@ -328,8 +257,8 @@ table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
           <button class="ctrl-pill" data-speed="4">4×</button>
         </div>
       </div>
-      <input type="range" class="week-scrubber" id="week-scrubber" min="0" max="12" value="12">
-      <span class="scrubber-week" id="scrubber-label">3/26</span>
+      <input type="range" class="week-scrubber" id="week-scrubber" min="0" max="13" value="13">
+      <span class="scrubber-week" id="scrubber-label">4/2</span>
       <div class="ghost-group">
         <span class="ctrl-label">Ghost Trail</span>
         <div class="pill-group" id="ghost-pills">
@@ -340,13 +269,17 @@ table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
         </div>
       </div>
     </div>
-    <div class="chart-wrap">
-      <canvas id="chart-animation"></canvas>
+    <div style="padding:0 28px 10px;display:flex;align-items:center;gap:10px;">
+      <button id="anim-toggle-btn" onclick="toggleAnimMode()" class="ctrl-pill" style="font-size:13px;padding:6px 14px;">▶ Animate Week History</button>
+      <span id="anim-mode-label" style="font-size:12px;color:var(--text3);">Showing current week (4/2)</span>
+    </div>
+    <div class="chart-wrap" id="alllines-chart-wrap">
+      <canvas id="chart-alllines"></canvas>
     </div>
     <div class="week-pills-wrap" id="week-pills"></div>
   </div>
 
-  <!-- ─── TAB 3: Year Over Year ─── -->
+  <!-- ─── TAB 3: Monthly Year Over Year ─── -->
   <div class="tab-panel" id="panel-3">
     <div class="chart-wrap">
       <canvas id="chart-yoy"></canvas>
@@ -354,14 +287,6 @@ table.var-table{width:100%;border-collapse:collapse;font-size:11px;}
     <div class="yoy-cards" id="yoy-cards"></div>
   </div>
 
-  <!-- ─── TAB 4: Variance Detail ─── -->
-  <div class="tab-panel" id="panel-4">
-    <div class="chart-wrap short">
-      <canvas id="chart-variance"></canvas>
-    </div>
-    <div class="var-table-wrap">
-      <table class="var-table" id="var-table"></table>
-    </div>
   </div>
 </div>
 
@@ -393,18 +318,19 @@ let WEEKLY_TREND = [
   {label:'2026-3-12',short:'3/12', total:30302855,months:[2292331,2228606,2292037,2363109,2492041,2422195,2494305,2533181,2608381,2755723,2833594,2987353]},
   {label:'2026-3-19',short:'3/19', total:29869606,months:[2277791,2218606,2293734,2390389,2523871,2473052,2422094,2453869,2527734,2712179,2712258,2864030]},
   {label:'2026-3-26',short:'3/26', total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+  {label:'2026-4-2', short:'4/2',  total:29340000,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
 ];
 
 // All 8 lines for current week
 let CURRENT_LINES = {
-  forecastVar: {label:'Predicted — Forecast Variances',  total:26882058, months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
-  rawVar:      {label:'Predicted — Raw Variances',       total:28673825, months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
-  bookedVar:   {label:'Predicted — Booked Variances',    total:30102572, months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
-  avgVar:      {label:'Predicted — Average Variances',   total:29339184, months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
-  rbVar:       {label:'Predicted — Raw+Booked Variances',total:30553720, months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]},
-  offFcst:     {label:'Official Forecast / Budget',      total:27148021, months:[2280521,2218606,2215585,2398899,2427200,2407211,2200000,2200000,2200000,2200000,2200000,2200000]},
-  rawFcst:     {label:'Raw Forecast',                    total:27163312, months:[2280521,2218606,2250585,2409333,2757900,2781858,2540504,2321286,2170771,1924105,1786308,1721536]},
-  bookedProj:  {label:'Booked Projects',                 total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
+  forecastVar: {label:'Official Forecast Variances Model',  total:26882058, months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
+  rawVar:      {label:'Raw Forecast Variances Model',       total:28673825, months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
+  bookedVar:   {label:'Booked Variances Model',             total:30102572, months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
+  avgVar:      {label:'Combined Variances Model',           total:29339184, months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+  rbVar:       {label:'Raw & Booked Variances Model',       total:30553720, months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]},
+  offFcst:     {label:'Official Forecast / Budget',         total:27148021, months:[2280521,2218606,2215585,2398899,2427200,2407211,2200000,2200000,2200000,2200000,2200000,2200000]},
+  rawFcst:     {label:'Backlog + Pipeline',                 total:27163312, months:[2280521,2218606,2250585,2409333,2757900,2781858,2540504,2321286,2170771,1924105,1786308,1721536]},
+  bookedProj:  {label:'Backlog Only',                       total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
 };
 
 // Year-over-year actuals
@@ -442,12 +368,12 @@ const CHART_COMMON = {
   scales:{
     x:{
       grid:{color:'rgba(255,255,255,0.04)'},
-      ticks:{color:'#888',font:{family:'Raleway',size:11},maxRotation:0},
+      ticks:{color:'#888',font:{family:'Raleway',size:12},maxRotation:0},
       border:{color:'rgba(255,255,255,0.08)'}
     },
     y:{
       grid:{color:'rgba(255,255,255,0.04)'},
-      ticks:{color:'#888',font:{family:'Raleway',size:11},callback:v=>'$'+(v/1e6).toFixed(1)+'M'},
+      ticks:{color:'#888',font:{family:'Raleway',size:12},callback:v=>'$'+(v/1e6).toFixed(1)+'M'},
       border:{color:'rgba(255,255,255,0.08)'}
     }
   }
@@ -547,14 +473,14 @@ function initTrend(){
 //  TAB 1 — ALL LINES
 // ══════════════════════════════════════════════════════════════════
 const SERIES_CONFIG = [
-  {key:'avgVar',    color:'#0080FF', width:2.5, dash:[], label:'Predicted — Average Variances',     group:'predicted'},
-  {key:'forecastVar',color:'#CFC7D4',width:1.8, dash:[], label:'Predicted — Forecast Variances',   group:'predicted'},
-  {key:'rawVar',    color:'#7fc7ed', width:1.8, dash:[], label:'Predicted — Raw Variances',         group:'predicted'},
-  {key:'bookedVar', color:'#73F2E5', width:1.8, dash:[], label:'Predicted — Booked Variances',      group:'predicted'},
-  {key:'rbVar',     color:'#9484FF', width:1.8, dash:[], label:'Predicted — Raw+Booked Variances',  group:'predicted'},
-  {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Official Forecast / Budget',    group:'source'},
-  {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Raw Forecast',                  group:'source'},
-  {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Booked Projects',   group:'source'},
+  {key:'avgVar',    color:'#0080FF', width:2.5, dash:[], label:'Combined Variances Model',           group:'predicted'},
+  {key:'forecastVar',color:'#CFC7D4',width:1.8, dash:[], label:'Official Forecast Variances Model', group:'predicted'},
+  {key:'rawVar',    color:'#7fc7ed', width:1.8, dash:[], label:'Raw Forecast Variances Model',       group:'predicted'},
+  {key:'bookedVar', color:'#73F2E5', width:1.8, dash:[], label:'Booked Variances Model',             group:'predicted'},
+  {key:'rbVar',     color:'#9484FF', width:1.8, dash:[], label:'Raw & Booked Variances Model',       group:'predicted'},
+  {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Official Forecast / Budget',     group:'source'},
+  {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Backlog + Pipeline',             group:'source'},
+  {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Backlog Only',        group:'source'},
 ];
 
 let chartAllLines;
@@ -587,7 +513,7 @@ function initAllLines(){
           callbacks:{
             label: item => {
               const total = CURRENT_LINES[SERIES_CONFIG[item.datasetIndex].key].total;
-              return ` ${item.dataset.label.replace('Predicted — ','')}: ${fmtK(item.raw)}  (${fmt(total)} annual)`;
+              return ` ${item.dataset.label}: ${fmtK(item.raw)}  (${fmt(total)} annual)`;
             }
           }
         }
@@ -595,6 +521,31 @@ function initAllLines(){
     })
   });
   buildLegend();
+  buildWeekPills();
+
+  // Wire scrubber and control pills (animation mode)
+  document.getElementById('week-scrubber').addEventListener('input',e=>{
+    if(!animMode) return;
+    animFrame=parseInt(e.target.value);
+    renderAnimFrame(); updatePills();
+    document.getElementById('scrubber-label').textContent=ANIM_DATA[animFrame].short;
+  });
+  document.querySelectorAll('#speed-pills .ctrl-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#speed-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      animSpeed=parseFloat(btn.dataset.speed);
+      if(animPlaying){clearInterval(animTimer);startAnim();}
+    });
+  });
+  document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      ghostCount=parseInt(btn.dataset.ghost);
+      if(animMode) renderAnimFrame();
+    });
+  });
 }
 
 function buildLegend(){
@@ -606,7 +557,7 @@ function buildLegend(){
     div.className='legend-group';
     const lbl = document.createElement('div');
     lbl.className='legend-group-label';
-    lbl.textContent = grp==='predicted' ? 'Predicted (5 models)' : 'Source Lines';
+    lbl.textContent = grp==='predicted' ? 'Predictive Models' : 'Current Source Data';
     div.appendChild(lbl);
 
     SERIES_CONFIG.filter(s=>s.group===grp).forEach((s,i)=>{
@@ -719,19 +670,26 @@ const ANIM_DATA = [
    bookedVar:  {total:30102572,months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
    avgVar:     {total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
    rbVar:      {total:30553720,months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]}},
+  {label:'2026-4-2',short:'4/2',
+   forecastVar:{total:26882058,months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
+   rawVar:     {total:28673825,months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
+   bookedVar:  {total:30102572,months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
+   avgVar:     {total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+   rbVar:      {total:30553720,months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]}},
 ];
 
 // Series config — matches All Lines colors exactly
 const ANIM_SERIES = [
-  {key:'forecastVar',color:'#CFC7D4',label:'Forecast Variances',  width:1.8},
-  {key:'rawVar',     color:'#7fc7ed',label:'Raw Variances',        width:1.8},
-  {key:'bookedVar',  color:'#73F2E5',label:'Booked Variances',     width:1.8},
-  {key:'avgVar',     color:'#0080FF',label:'Average Variances',    width:2.8},
-  {key:'rbVar',      color:'#9484FF',label:'Raw+Booked Variances', width:1.8},
+  {key:'forecastVar',color:'#CFC7D4',label:'Official Forecast Variances Model',  width:1.8},
+  {key:'rawVar',     color:'#7fc7ed',label:'Raw Forecast Variances Model',        width:1.8},
+  {key:'bookedVar',  color:'#73F2E5',label:'Booked Variances Model',              width:1.8},
+  {key:'avgVar',     color:'#0080FF',label:'Combined Variances Model',            width:2.8},
+  {key:'rbVar',      color:'#9484FF',label:'Raw & Booked Variances Model',        width:1.8},
 ];
 
 // ── ANIMATION CHART
-let chartAnim, animFrame=12, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
+let animFrame=13, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
+let animMode = false; // false = static current week, true = animation mode
 
 function hexToRgba(hex,a){
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
@@ -780,82 +738,116 @@ function ghostDatasets(){
   return ghosts;
 }
 
-function updateAnimChart(){
-  if(!chartAnim) return;
-  const w=ANIM_DATA[animFrame];
-  const current=ANIM_SERIES.map(s=>({
-    label:s.label,
-    data:w[s.key].months,
-    borderColor:s.color,borderWidth:s.width,
-    pointRadius:s.key==='avgVar'?5:3,
-    pointBackgroundColor:s.color,
-    tension:0.3,fill:false,
+function toggleAnimMode(){
+  animMode = !animMode;
+  const btn = document.getElementById('anim-toggle-btn');
+  const lbl = document.getElementById('anim-mode-label');
+  const controls = document.getElementById('anim-controls-bar');
+  const pills = document.getElementById('week-pills');
+
+  if(animMode){
+    btn.textContent = '✕ Back to Current Week';
+    btn.style.borderColor = 'var(--violet)';
+    btn.style.color = 'var(--violet)';
+    controls.style.display = 'flex';
+    pills.style.display = 'flex';
+    lbl.textContent = `Animating week history (${ANIM_DATA.length} weeks)`;
+    // Stop any existing play
+    clearInterval(animTimer); animPlaying = false;
+    document.getElementById('play-btn').textContent = '▶';
+    animFrame = ANIM_DATA.length - 1;
+    updateScrubber();
+    updatePills();
+    renderAnimFrame();
+  } else {
+    btn.textContent = '▶ Animate Week History';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    controls.style.display = 'none';
+    pills.style.display = 'none';
+    clearInterval(animTimer); animPlaying = false;
+    const latestLabel = WEEKLY_TREND[WEEKLY_TREND.length-1].label;
+    lbl.textContent = `Showing current week (${latestLabel})`;
+    // Restore static current-week view
+    if(chartAllLines){
+      chartAllLines.data.datasets = SERIES_CONFIG.map(s=>({
+        label: s.label,
+        data:  CURRENT_LINES[s.key].months,
+        borderColor: s.color,
+        borderWidth: s.width,
+        borderDash: s.dash || [],
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: s.color,
+        tension: 0.3,
+        fill: false,
+      }));
+      chartAllLines.options.plugins.title = {display:false};
+      chartAllLines.update('none');
+    }
+  }
+}
+
+function renderAnimFrame(){
+  if(!chartAllLines) return;
+  const w = ANIM_DATA[animFrame];
+  const current = ANIM_SERIES.map(s=>({
+    label: s.label,
+    data: w[s.key].months,
+    borderColor: s.color, borderWidth: s.width,
+    borderDash: [],
+    pointRadius: s.key==='avgVar'?5:3,
+    pointBackgroundColor: s.color,
+    tension: 0.3, fill: false,
   }));
-  chartAnim.data.datasets=[...ghostDatasets(),...current];
+  // Build ghost datasets from anim series only
+  const ghosts=[];
+  const max=ghostCount===0?0:ghostCount===99?animFrame:Math.min(ghostCount,animFrame);
+  for(let g=1;g<=max;g++){
+    const idx=animFrame-g;
+    if(idx<0) continue;
+    const op=g===1?0.30:g===2?0.17:g===3?0.10:g<=5?0.06:0.03;
+    const gw=ANIM_DATA[idx];
+    ANIM_SERIES.forEach(s=>{
+      ghosts.push({
+        label:`_g_${idx}_${s.key}`,
+        data:gw[s.key].months,
+        borderColor:hexToRgba(s.color,op),
+        borderWidth:1.2, borderDash:[4,4],
+        pointRadius:0, tension:0.3, fill:false,
+      });
+    });
+  }
+  chartAllLines.data.datasets=[...ghosts,...current];
   const pred=w.avgVar.total, d=pred-TARGET;
-  chartAnim.options.plugins.title={
+  chartAllLines.options.plugins.title={
     display:true,
-    text:`Week: ${w.label}  ·  Avg Variance: ${fmt(pred)}  ·  ${d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below'} $26M target`,
+    text:`Week: ${w.label}  ·  Combined Variances: ${fmt(pred)}  ·  ${d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below'} $26M target`,
     color:pred>=TARGET?'#22c55e':'#FA5C5C',
     font:{family:'Raleway',size:12,weight:'700'},padding:{bottom:10}
   };
-  chartAnim.update('none');
+  chartAllLines.options.plugins.legend={
+    display:true,position:'top',
+    labels:{color:'#CFC7D4',font:{family:'Raleway',size:11},boxWidth:22,boxHeight:2,padding:14,
+      filter:item=>!item.text.startsWith('_')}
+  };
+  chartAllLines.options.plugins.tooltip={
+    ...chartAllLines.options.plugins.tooltip,
+    filter: item => !item.dataset.label.startsWith('_'),
+    callbacks:{
+      title: items => MONTHS[items[0].dataIndex],
+      label: item => ` ${item.dataset.label}: ${fmtK(item.raw)}`,
+    }
+  };
+  chartAllLines.update('none');
 }
 
-function initAnimation(){
-  const ctx=document.getElementById('chart-animation').getContext('2d');
-  chartAnim=new Chart(ctx,{
-    type:'line',
-    data:{labels:MONTHS,datasets:[]},
-    options:deepMerge(CHART_COMMON,{
-      animation:{duration:180},
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{
-          display:true,position:'top',
-          labels:{
-            color:'#CFC7D4',font:{family:'Raleway',size:11},
-            boxWidth:22,boxHeight:2,padding:14,
-            filter:item=>!item.text.startsWith('_'),
-          }
-        },
-        tooltip:{
-          filter: item => !item.dataset.label.startsWith('_'),
-          callbacks:{
-            title: items => MONTHS[items[0].dataIndex],
-            label: item => ` ${item.dataset.label}: ${fmtK(item.raw)}`,
-          }
-        }
-      },
-      scales:{
-        y:{min:1400000,max:4500000}
-      }
-    })
-  });
-  buildWeekPills();
-  updateAnimChart();
+// Patch updateAnimChart to use renderAnimFrame
+function updateAnimChart(){ renderAnimFrame(); }
 
-  document.getElementById('week-scrubber').addEventListener('input',e=>{
-    animFrame=parseInt(e.target.value);
-    updateAnimChart();updatePills();
-    document.getElementById('scrubber-label').textContent=ANIM_DATA[animFrame].short;
-  });
-  document.querySelectorAll('#speed-pills .ctrl-pill').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('#speed-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      animSpeed=parseFloat(btn.dataset.speed);
-      if(animPlaying){clearInterval(animTimer);startAnim();}
-    });
-  });
-  document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('#ghost-pills .ctrl-pill').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      ghostCount=parseInt(btn.dataset.ghost);
-      updateAnimChart();
-    });
-  });
+function initAnimation(){
+  // Animation now runs on the chart-alllines canvas via toggleAnimMode()
+  // This stub exists for legacy tab-switching calls
 }
 
 function togglePlay(){
@@ -943,77 +935,7 @@ function buildYoYCards(){
   });
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  TAB 4 — VARIANCE DETAIL
-// ══════════════════════════════════════════════════════════════════
-let chartVar;
-function initVariance(){
-  const ctx = document.getElementById('chart-variance').getContext('2d');
-  chartVar = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels:MONTHS,
-      datasets:[
-        {label:'Forecast Variance %',data:VAR_AVGS.forecast,borderColor:'#CFC7D4',borderWidth:2,pointRadius:4,pointBackgroundColor:'#CFC7D4',tension:0.3,fill:false},
-        {label:'Raw Variance %',     data:VAR_AVGS.raw,     borderColor:'#7fc7ed',borderWidth:2,pointRadius:4,pointBackgroundColor:'#7fc7ed',tension:0.3,fill:false},
-        {label:'Booked Variance %',  data:VAR_AVGS.booked,  borderColor:'#73F2E5',borderWidth:2,pointRadius:4,pointBackgroundColor:'#73F2E5',tension:0.3,fill:false},
-      ]
-    },
-    options: deepMerge(CHART_COMMON, {
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{
-          display:true,position:'top',
-          labels:{color:'#CFC7D4',font:{family:'Raleway',size:11},boxWidth:20,boxHeight:2,padding:14}
-        },
-        tooltip:{
-          callbacks:{
-            label: item => ` ${item.dataset.label}: ${item.raw>0?'+':''}${item.raw.toFixed(2)}%`
-          }
-        }
-      },
-      scales:{
-        y:{
-          ticks:{callback:v=>{
-            if(Math.abs(v)<10) return v.toFixed(1)+'%';
-            return Math.round(v)+'%';
-          }},
-          grid:{color:'rgba(255,255,255,0.04)'}
-        }
-      }
-    })
-  });
-  buildVarTable();
-}
 
-function varCellClass(val){
-  if(Math.abs(val)<0.1) return 'vc-zero';
-  if(val<0) return val<-5?'vc-neg-hi':val<-1?'vc-neg-md':'vc-neg-lo';
-  return val>30?'vc-pos-hi':val>5?'vc-pos-md':'vc-pos-lo';
-}
-
-function buildVarTable(){
-  const tbl = document.getElementById('var-table');
-  // Header
-  tbl.innerHTML=`<thead><tr>
-    <th>Variance Type</th>${MONTHS.map(m=>`<th>${m}</th>`).join('')}<th>Avg</th>
-  </tr></thead>`;
-  const rows = [
-    {label:'Forecast Var %', data:VAR_AVGS.forecast, color:'#CFC7D4'},
-    {label:'Raw Var %',      data:VAR_AVGS.raw,      color:'#7fc7ed'},
-    {label:'Booked Var %',   data:VAR_AVGS.booked,   color:'#73F2E5'},
-  ];
-  const tbody = document.createElement('tbody');
-  rows.forEach(row=>{
-    const tr = document.createElement('tr');
-    const avg = row.data.reduce((a,b)=>a+b,0)/row.data.length;
-    tr.innerHTML=`<td style="color:${row.color}">${row.label}</td>`
-      + row.data.map(v=>`<td class="${varCellClass(v)}">${v>0?'+':''}${v.toFixed(2)}%</td>`).join('')
-      + `<td class="${varCellClass(avg)}" style="font-weight:800">${avg>0?'+':''}${avg.toFixed(2)}%</td>`;
-    tbody.appendChild(tr);
-  });
-  tbl.appendChild(tbody);
-}
 
 // ══════════════════════════════════════════════════════════════════
 //  HEADER / BANNER UPDATE
@@ -1023,42 +945,34 @@ function updateHeader(){
   const pred   = CURRENT_LINES.avgVar.total;
   const floor  = CURRENT_LINES.forecastVar.total;
   const ceil   = CURRENT_LINES.rbVar.total;
-  const ontrack = pred >= TARGET;
 
   document.getElementById('hdr-weeks').textContent = WEEKLY_TREND.length;
   document.getElementById('hdr-week').textContent  = latest.label;
 
-  // Banner
-  const banner = document.getElementById('main-banner');
-  banner.className = 'banner '+(ontrack?'green':'red');
-  banner.querySelector('.banner-status-tag').textContent = ontrack?'✓ ON TRACK':'✗ BELOW TARGET';
-  document.getElementById('banner-week-label').textContent = `As of week ${latest.label}`;
-  document.getElementById('banner-prediction').textContent = fmt(pred);
-  const d = pred - TARGET;
-  document.getElementById('banner-delta').textContent = d>=0?`↑ +${fmt(d)} above target`:`↓ ${fmt(Math.abs(d))} below target`;
-
   // Cards
-  document.getElementById('mc-week').textContent  = latest.label;
-  document.getElementById('mc-avg').textContent     = fmt(pred);
+  document.getElementById('mc-week').textContent    = latest.label;
+  document.getElementById('mc-avg').textContent      = fmt(pred);
   document.getElementById('mc-floor').textContent   = fmt(floor);
   document.getElementById('mc-ceiling').textContent = fmt(ceil);
   // color
   const avgEl = document.getElementById('mc-avg');
-  avgEl.className = 'mc-value '+(ontrack?'green':'coral');
+  avgEl.className = 'mc-value '+(pred >= TARGET ? 'green' : 'coral');
+
+  // Update anim mode label if visible
+  const animLbl = document.getElementById('anim-mode-label');
+  if(animLbl && !animMode) animLbl.textContent = `Showing current week (${latest.label})`;
 }
 
 // ══════════════════════════════════════════════════════════════════
 //  TAB SWITCHING
 // ══════════════════════════════════════════════════════════════════
-let chartsInited = {0:false,1:false,2:false,3:false,4:false};
+let chartsInited = {0:false,1:false,3:false};
 function initTab(t){
   if(chartsInited[t]) return;
   chartsInited[t]=true;
   if(t===0) initTrend();
   if(t===1) initAllLines();
-  if(t===2) initAnimation();
   if(t===3) initYoY();
-  if(t===4) initVariance();
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1067,8 +981,8 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+t).classList.add('active');
-    // Stop animation if leaving tab 2
-    if(animPlaying && t!==2){ clearInterval(animTimer); animPlaying=false; const pb=document.getElementById('play-btn'); if(pb) pb.textContent='▶'; }
+    // Stop animation if leaving tab 1
+    if(animPlaying && t!==1){ clearInterval(animTimer); animPlaying=false; const pb=document.getElementById('play-btn'); if(pb) pb.textContent='▶'; }
     setTimeout(()=>initTab(t), 30);
   });
 });
@@ -1148,9 +1062,29 @@ async function liveRefresh(){
         CURRENT_LINES.avgVar   = {...CURRENT_LINES.avgVar,   ...parseRow(weekRows,78)};
         CURRENT_LINES.rbVar    = {...CURRENT_LINES.rbVar,    ...parseRow(weekRows,79)};
 
+        // Update the last ANIM_DATA entry (or add new one) with live data
+        const liveAnimEntry = {
+          label: latestLabel,
+          short: latestLabel.replace('2026-','').replace('2025-',''),
+          forecastVar: {months: CURRENT_LINES.forecastVar.months, total: CURRENT_LINES.forecastVar.total},
+          rawVar:      {months: CURRENT_LINES.rawVar.months,      total: CURRENT_LINES.rawVar.total},
+          bookedVar:   {months: CURRENT_LINES.bookedVar.months,   total: CURRENT_LINES.bookedVar.total},
+          avgVar:      {months: CURRENT_LINES.avgVar.months,      total: CURRENT_LINES.avgVar.total},
+          rbVar:       {months: CURRENT_LINES.rbVar.months,       total: CURRENT_LINES.rbVar.total},
+        };
+        // Replace last entry if same label, else push
+        if(ANIM_DATA[ANIM_DATA.length-1].label === latestLabel){
+          ANIM_DATA[ANIM_DATA.length-1] = liveAnimEntry;
+        } else {
+          ANIM_DATA.push(liveAnimEntry);
+        }
+        animFrame = ANIM_DATA.length - 1;
+        // Update scrubber max
+        const scrubber = document.getElementById('week-scrubber');
+        if(scrubber) scrubber.max = ANIM_DATA.length - 1;
+
         // Variance averages rows 72-74 (0-indexed: 71-73)
         if(weekRows.length>=75){
-          // Sheet rows 73-75 (0-indexed 72-74) = Forecast/Raw/Booked variance averages
           VAR_AVGS.forecast = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[72]?.[c]));
           VAR_AVGS.raw      = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[73]?.[c]));
           VAR_AVGS.booked   = [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parsePct(weekRows[74]?.[c]));
@@ -1178,10 +1112,10 @@ async function liveRefresh(){
 
 function rebuildAllCharts(){
   // Destroy and re-init all active charts
-  [chartTrend, chartAllLines, chartAnim, chartYoY, chartVar].forEach(c=>{ try{ if(c) c.destroy(); }catch(e){} });
-  chartTrend=chartAllLines=chartAnim=chartYoY=chartVar=null;
-  chartsInited={0:false,1:false,2:false,3:false,4:false};
-  animFrame=ANIM_DATA.length-1; animPlaying=false;
+  [chartTrend, chartAllLines, chartYoY].forEach(c=>{ try{ if(c) c.destroy(); }catch(e){} });
+  chartTrend=chartAllLines=chartYoY=null;
+  chartsInited={0:false,1:false,3:false};
+  animFrame=ANIM_DATA.length-1; animPlaying=false; animMode=false;
   // Re-init currently visible tab
   const activeTab = parseInt(document.querySelector('.tab-btn.active').dataset.tab);
   initTab(activeTab);
