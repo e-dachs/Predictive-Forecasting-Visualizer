@@ -71,7 +71,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .metric-card .mc-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
 .metric-card .mc-value{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
 .metric-card .mc-sub{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500;}
-.mc-value.green{color:var(--blue);}
+.mc-value.green{color:#FFFFFF;}
 .mc-value.blue{color:var(--blue);}
 .mc-value.coral{color:var(--coral);}
 
@@ -216,13 +216,13 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   </div>
   <div class="metric-card">
     <div class="mc-label">Conservative Floor</div>
-    <div class="mc-value" id="mc-floor" style="color:var(--notgray);">$26.88M</div>
+    <div class="mc-value" id="mc-floor" style="color:#9484FF;">$26.88M</div>
     <div class="mc-sub">official forecast variances model</div>
   </div>
   <div class="metric-card">
     <div class="mc-label">Optimistic Ceiling</div>
-    <div class="mc-value" id="mc-ceiling" style="color:var(--violet);">$30.55M</div>
-    <div class="mc-sub">raw &amp; booked variances model</div>
+    <div class="mc-value" id="mc-ceiling" style="color:#0080FF;">$30.55M</div>
+    <div class="mc-sub">booked variances model</div>
   </div>
 </div>
 
@@ -884,7 +884,7 @@ function updateHeader(){
   const latest = WEEKLY_TREND[WEEKLY_TREND.length-1];
   const pred   = CURRENT_LINES.avgVar.total;
   const floor  = CURRENT_LINES.forecastVar.total;
-  const ceil   = CURRENT_LINES.rbVar.total;
+  const ceil   = CURRENT_LINES.bookedVar.total;
   const ontrack = pred >= TARGET;
 
   document.getElementById('hdr-weeks').textContent = WEEKLY_TREND.length;
@@ -894,9 +894,11 @@ function updateHeader(){
   document.getElementById('mc-week').textContent    = latest.label;
   document.getElementById('mc-avg').textContent     = fmt(pred);
   document.getElementById('mc-floor').textContent   = fmt(floor);
+  document.getElementById('mc-floor').style.color = '#9484FF';
   document.getElementById('mc-ceiling').textContent = fmt(ceil);
+  document.getElementById('mc-ceiling').style.color = '#0080FF';
   const avgEl = document.getElementById('mc-avg');
-  avgEl.className = 'mc-value '+(ontrack?'blue':'coral');
+  avgEl.className = 'mc-value '+(ontrack?'green':'coral');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1002,31 +1004,62 @@ async function liveRefresh(){
       // "Predicted from Booked Variances"     → bookedVar    (NOT raw)
       // "Predicted from Average Variances"    → avgVar       (average / combined / avg)
       // "Predicted from Raw+Booked" or "Raw & Booked" → rbVar
-      applyRow('forecastVar', findRowByLabel(weekRows, 'predicted', 'forecast variances'));
-      applyRow('rawVar',      findRowByLabel(weekRows, 'predicted', 'raw variances'));
-      // "Booked Variances" — exclude "Raw+Booked" rows
+      // ── Prediction row matching — each rule is as specific as possible to avoid cross-matches
+      // forecastVar: "predicted" + "forecast variances" but NOT "raw" (avoids Raw Forecast Variances)
+      const fvIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return c.includes('predicted') && c.includes('forecast variances') && !c.includes('raw');
+      });
+      // rawVar: "predicted" + "raw variances" but NOT "booked" (avoids Raw+Booked Variances)
+      const rvIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return c.includes('predicted') && c.includes('raw variances') && !c.includes('booked');
+      });
+      // bookedVar: "predicted" + "booked variances" but NOT "raw" (avoids Raw+Booked)
       const bookedIdx = weekRows.findIndex(r => {
         const c = String(r?.[3]||'').toLowerCase();
         return c.includes('predicted') && c.includes('booked variances') && !c.includes('raw');
       });
-      applyRow('bookedVar', bookedIdx);
-      applyRow('avgVar',    findRowByLabel(weekRows, 'predicted', 'average variances'));
-      // Raw+Booked: may be "Raw+Booked", "Raw & Booked", or "Raw and Booked"
+      // avgVar: "predicted" + "average variances" — unique enough, no exclusion needed
+      const avIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return c.includes('predicted') && c.includes('average variances');
+      });
+      // rbVar: "predicted" + explicitly contains BOTH raw and booked together
+      // prefer "raw+booked" literal, fall back to "raw" && "booked" && NOT "average" && NOT standalone "raw variances"
       const rbIdx = weekRows.findIndex(r => {
         const c = String(r?.[3]||'').toLowerCase();
-        return c.includes('predicted') && (c.includes('raw+booked') || (c.includes('raw') && c.includes('booked') && !c.includes('average')));
+        if(!c.includes('predicted')) return false;
+        return c.includes('raw+booked') || c.includes('raw & booked') || c.includes('raw and booked') ||
+               (c.includes('raw') && c.includes('booked') && !c.includes('average') && !c.includes('raw variances'));
       });
-      applyRow('rbVar', rbIdx);
 
-      // Source rows
-      applyRow('offFcst',    findRowByLabel(weekRows, 'official forecast'));
-      applyRow('rawFcst',    findRowByLabel(weekRows, 'raw forecast'));
-      applyRow('bookedProj', findRowByLabel(weekRows, 'booked project'));
+      applyRow('forecastVar', fvIdx);
+      applyRow('rawVar',      rvIdx);
+      applyRow('bookedVar',   bookedIdx);
+      applyRow('avgVar',      avIdx);
+      applyRow('rbVar',       rbIdx);
 
-      console.log('Row indices found — forecastVar:', findRowByLabel(weekRows,'predicted','forecast variances'),
-        'rawVar:', findRowByLabel(weekRows,'predicted','raw variances'),
-        'bookedVar:', bookedIdx, 'avgVar:', findRowByLabel(weekRows,'predicted','average variances'),
-        'rbVar:', rbIdx, 'total rows:', weekRows.length);
+      // ── Source rows — must NOT contain "predicted", and must be specific enough not to grab totals/headers
+      const findSourceRow = (rows, ...keywords) => rows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return !c.includes('predicted') && keywords.every(k => c.includes(k.toLowerCase()));
+      });
+      applyRow('offFcst',    findSourceRow(weekRows, 'official forecast'));
+      // rawFcst: "raw forecast" but NOT "predicted" and NOT "variances" (avoids prediction rows)
+      const rawFcstIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return !c.includes('predicted') && c.includes('raw forecast') && !c.includes('variances');
+      });
+      applyRow('rawFcst', rawFcstIdx);
+      // bookedProj: non-predicted row with "booked" but NOT "variances" (avoids prediction rows)
+      const bookedProjIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return !c.includes('predicted') && c.includes('booked') && !c.includes('variances');
+      });
+      applyRow('bookedProj', bookedProjIdx);
+
+      console.log('Row indices — fv:',fvIdx,'rv:',rvIdx,'bk:',bookedIdx,'av:',avIdx,'rb:',rbIdx,'rawFcst:',rawFcstIdx,'bookedProj:',bookedProjIdx,'totalRows:',weekRows.length);
       console.log('CURRENT_LINES totals:', Object.fromEntries(Object.entries(CURRENT_LINES).map(([k,v])=>[k,v.total])));
 
       // ── 3. Fetch ALL weekly tabs to build a complete ANIM_DATA
@@ -1041,27 +1074,21 @@ async function liveRefresh(){
               months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
               total:  parseMoney(rows[idx]?.[16])
             });
-            const findLbl = (...keywords) => rows.findIndex(r => {
-              const c = String(r?.[3]||'').toLowerCase();
-              return keywords.every(k => c.includes(k.toLowerCase()));
-            });
-            const bookedOnlyIdx = rows.findIndex(r => {
-              const c = String(r?.[3]||'').toLowerCase();
-              return c.includes('predicted') && c.includes('booked variances') && !c.includes('raw');
-            });
-            const rbOnlyIdx = rows.findIndex(r => {
-              const c = String(r?.[3]||'').toLowerCase();
-              return c.includes('predicted') && (c.includes('raw+booked') || (c.includes('raw') && c.includes('booked') && !c.includes('average')));
-            });
             const safe = (idx) => idx >= 0 ? prAt(idx) : {months:Array(12).fill(0),total:0};
+            const find = (fn) => rows.findIndex(fn);
+            const afvIdx = find(r => { const c=String(r?.[3]||'').toLowerCase(); return c.includes('predicted') && c.includes('forecast variances') && !c.includes('raw'); });
+            const arvIdx = find(r => { const c=String(r?.[3]||'').toLowerCase(); return c.includes('predicted') && c.includes('raw variances') && !c.includes('booked'); });
+            const abkIdx = find(r => { const c=String(r?.[3]||'').toLowerCase(); return c.includes('predicted') && c.includes('booked variances') && !c.includes('raw'); });
+            const aavIdx = find(r => { const c=String(r?.[3]||'').toLowerCase(); return c.includes('predicted') && c.includes('average variances'); });
+            const arbIdx = find(r => { const c=String(r?.[3]||'').toLowerCase(); if(!c.includes('predicted')) return false; return c.includes('raw+booked') || c.includes('raw & booked') || c.includes('raw and booked') || (c.includes('raw') && c.includes('booked') && !c.includes('average') && !c.includes('raw variances')); });
             return {
               label: w.label,
               short: w.short,
-              forecastVar: safe(findLbl('predicted','forecast variances')),
-              rawVar:      safe(findLbl('predicted','raw variances')),
-              bookedVar:   safe(bookedOnlyIdx),
-              avgVar:      safe(findLbl('predicted','average variances')),
-              rbVar:       safe(rbOnlyIdx),
+              forecastVar: safe(afvIdx),
+              rawVar:      safe(arvIdx),
+              bookedVar:   safe(abkIdx),
+              avgVar:      safe(aavIdx),
+              rbVar:       safe(arbIdx),
             };
           } catch(e){ return null; }
         })
