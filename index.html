@@ -468,7 +468,7 @@ function initTrend(){
 //  TAB 1 — CURRENT MONTHLY VIEW — ALL MODELS
 // ══════════════════════════════════════════════════════════════════
 const SERIES_CONFIG = [
-  {key:'avgVar',    color:'#000000', width:2.5, dash:[], label:'Combined Variances Model',           group:'predicted'},
+  {key:'avgVar',    color:'#FFFFFF', width:2.5, dash:[], label:'Combined Variances Model',           group:'predicted'},
   {key:'forecastVar',color:'#9484FF',width:1.8, dash:[], label:'Official Forecast Variances Model',  group:'predicted'},
   {key:'rawVar',    color:'#73F2E5', width:1.8, dash:[], label:'Raw Forecast Variances Model',        group:'predicted'},
   {key:'bookedVar', color:'#0080FF', width:1.8, dash:[], label:'Booked Variances Model',              group:'predicted'},
@@ -655,7 +655,7 @@ const ANIM_SERIES = [
   {key:'forecastVar',color:'#9484FF',label:'Official Forecast Variances Model', width:1.8},
   {key:'rawVar',     color:'#73F2E5',label:'Raw Forecast Variances Model',       width:1.8},
   {key:'bookedVar',  color:'#0080FF',label:'Booked Variances Model',             width:1.8},
-  {key:'avgVar',     color:'#000000',label:'Combined Variances Model',           width:2.8},
+  {key:'avgVar',     color:'#FFFFFF',label:'Combined Variances Model',           width:2.8},
   {key:'rbVar',      color:'#FA5C5C',label:'Raw & Booked Variances Model',       width:1.8},
 ];
 
@@ -830,11 +830,11 @@ function initYoY(){
   datasets.push({
     label:'2026 (Combined Variances Model)',
     data: CURRENT_LINES.avgVar.months,
-    borderColor:'#000000',
+    borderColor:'#FFFFFF',
     borderWidth:2.2,
     borderDash:[7,4],
     pointRadius:4,
-    pointBackgroundColor:'#000000',
+    pointBackgroundColor:'#FFFFFF',
     tension:0.3, fill:false,
   });
 
@@ -862,7 +862,7 @@ function buildYoYCards(){
   const maxTotal = Math.max(...[2022,2023,2024,2025].map(y=>YOY[y].total), CURRENT_LINES.avgVar.total);
   const entries = [
     ...Object.entries(YOY).map(([y,d])=>({year:y,total:d.total,color:d.color,label:'Actual',months:d.months})),
-    {year:'2026',total:CURRENT_LINES.avgVar.total,color:'#000000',label:'Prediction',months:CURRENT_LINES.avgVar.months}
+    {year:'2026',total:CURRENT_LINES.avgVar.total,color:'#FFFFFF',label:'Prediction',months:CURRENT_LINES.avgVar.months}
   ];
   entries.forEach(e=>{
     const card = document.createElement('div');
@@ -974,20 +974,51 @@ async function liveRefresh(){
       const latestLabel = WEEKLY_TREND[WEEKLY_TREND.length-1].label;
 
       // ── 2. Fetch latest weekly tab for CURRENT_LINES
-      const weekRows = await fetchBySheetName(latestLabel, 'A1:Z85');
+      const weekRows = await fetchBySheetName(latestLabel, 'A1:Z100');
       const parseRow = (rows, idx) => ({
         months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
         total:  parseMoney(rows[idx]?.[16])
       });
-      // Update CURRENT_LINES from whatever rows we got — no hard minimum
-      CURRENT_LINES.offFcst   = {...CURRENT_LINES.offFcst,   ...parseRow(weekRows,34)};
-      CURRENT_LINES.rawFcst   = {...CURRENT_LINES.rawFcst,   ...parseRow(weekRows,35)};
-      CURRENT_LINES.bookedProj= {...CURRENT_LINES.bookedProj,...parseRow(weekRows,36)};
-      CURRENT_LINES.forecastVar={...CURRENT_LINES.forecastVar,...parseRow(weekRows,75)};
-      CURRENT_LINES.rawVar    = {...CURRENT_LINES.rawVar,    ...parseRow(weekRows,76)};
-      CURRENT_LINES.bookedVar = {...CURRENT_LINES.bookedVar, ...parseRow(weekRows,77)};
-      CURRENT_LINES.avgVar    = {...CURRENT_LINES.avgVar,    ...parseRow(weekRows,78)};
-      CURRENT_LINES.rbVar     = {...CURRENT_LINES.rbVar,     ...parseRow(weekRows,79)};
+      // Find rows by searching column D (index 3) for known label substrings
+      // This is robust to sheet row count changes
+      const findRow = (rows, ...terms) => rows.findIndex(r => {
+        const cell = String(r?.[3]||'').toLowerCase();
+        return terms.every(t => cell.includes(t.toLowerCase()));
+      });
+      const parseRowAt = (rows, idx) => idx < 0 ? null : ({
+        months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
+        total:  parseMoney(rows[idx]?.[16])
+      });
+      const applyIfFound = (key, idx) => {
+        if(idx >= 0){ const d = parseRowAt(weekRows, idx); if(d && d.total > 0) CURRENT_LINES[key] = {...CURRENT_LINES[key], ...d}; }
+      };
+
+      // Source rows (cols E-P = indices 4-15, total col Q = index 16)
+      applyIfFound('offFcst',    findRow(weekRows, 'official', 'forecast'));
+      applyIfFound('rawFcst',    findRow(weekRows, 'raw forecast'));
+      applyIfFound('bookedProj', findRow(weekRows, 'booked project'));
+
+      // Prediction rows — search for variance model labels
+      applyIfFound('forecastVar', findRow(weekRows, 'forecast var'));
+      applyIfFound('rawVar',      findRow(weekRows, 'raw var'));
+      applyIfFound('bookedVar',   findRow(weekRows, 'booked var'));
+      applyIfFound('avgVar',      findRow(weekRows, 'avg var', 'average var', 'combined'));
+      applyIfFound('rbVar',       findRow(weekRows, 'raw+booked', 'raw + booked', 'rb var'));
+
+      // Fallback: if label search found nothing, try fixed offsets from end of data
+      const tryFallback = (key, offsetFromEnd) => {
+        if(CURRENT_LINES[key].total === 0 || !CURRENT_LINES[key].months.some(v=>v>0)){
+          const idx = weekRows.length - offsetFromEnd;
+          if(idx >= 0){ const d = parseRowAt(weekRows, idx); if(d && d.total > 0) CURRENT_LINES[key] = {...CURRENT_LINES[key], ...d}; }
+        }
+      };
+      tryFallback('forecastVar', 5);
+      tryFallback('rawVar',      4);
+      tryFallback('bookedVar',   3);
+      tryFallback('avgVar',      2);
+      tryFallback('rbVar',       1);
+
+      console.log('CURRENT_LINES after parse:', Object.fromEntries(Object.entries(CURRENT_LINES).map(([k,v])=>[k,v.total])));
 
       // ── 3. Fetch ALL weekly tabs to build a complete ANIM_DATA
       //    Each weekly tab has the 5 prediction rows at indices 75-79 (same layout).
@@ -995,20 +1026,31 @@ async function liveRefresh(){
       const animResults = await Promise.all(
         WEEKLY_TREND.map(async w => {
           try {
-            const rows = await fetchBySheetName(w.label, 'A1:Z85');
-            if(rows.length < 36) return null; // need at least through row 36 for source lines
-            const pr = (idx) => ({
+            const rows = await fetchBySheetName(w.label, 'A1:Z100');
+            if(rows.length < 10) return null;
+            const prAt = (idx) => ({
               months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
               total:  parseMoney(rows[idx]?.[16])
             });
+            const findR = (rows, ...terms) => rows.findIndex(r => {
+              const cell = String(r?.[3]||'').toLowerCase();
+              return terms.every(t => cell.includes(t.toLowerCase()));
+            });
+            const getRow = (...terms) => {
+              const idx = findR(rows, ...terms);
+              return idx >= 0 ? prAt(idx) : null;
+            };
+            const getRowOrOffset = (offsetFromEnd, ...terms) => {
+              return getRow(...terms) || prAt(rows.length - offsetFromEnd);
+            };
             return {
               label: w.label,
               short: w.short,
-              forecastVar: pr(75),
-              rawVar:      pr(76),
-              bookedVar:   pr(77),
-              avgVar:      pr(78),
-              rbVar:       pr(79),
+              forecastVar: getRowOrOffset(5, 'forecast var'),
+              rawVar:      getRowOrOffset(4, 'raw var'),
+              bookedVar:   getRowOrOffset(3, 'booked var'),
+              avgVar:      getRowOrOffset(2, 'avg var', 'average var', 'combined'),
+              rbVar:       getRowOrOffset(1, 'raw+booked', 'raw + booked', 'rb var'),
             };
           } catch(e){ return null; }
         })
@@ -1023,7 +1065,8 @@ async function liveRefresh(){
 
       const now = new Date();
       document.getElementById('data-ts').textContent = `Live · ${now.toLocaleTimeString()}`;
-      document.getElementById('status-msg').innerHTML = `Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows fetched: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      const avgTotal = CURRENT_LINES.avgVar.total;
+      document.getElementById('status-msg').innerHTML = `Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · combined model: <strong style="color:var(--teal)">${fmt(avgTotal)}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   } catch(e){
