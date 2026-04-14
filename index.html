@@ -71,7 +71,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .metric-card .mc-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
 .metric-card .mc-value{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
 .metric-card .mc-sub{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500;}
-.mc-value.green{color:var(--green);}
+.mc-value.green{color:var(--blue);}
 .mc-value.blue{color:var(--blue);}
 .mc-value.coral{color:var(--coral);}
 
@@ -144,19 +144,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .week-pill:hover{border-color:rgba(148,132,255,0.5);color:var(--violet);}
 .week-pill.active{background:rgba(148,132,255,0.2);border-color:var(--violet);color:var(--violet);}
 
-/* ── static/animate toggle ── */
-.view-mode-toggle{
-  display:flex;align-items:center;gap:6px;padding:4px;
-  background:var(--card);border:1px solid var(--border);border-radius:9px;
-  margin-right:4px;
-}
-.vm-btn{
-  background:none;border:none;color:var(--text3);
-  padding:5px 12px;border-radius:6px;font-family:'Raleway',sans-serif;
-  font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;
-}
-.vm-btn.active{background:var(--blue);color:#fff;}
-.anim-only{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+
 
 /* ── YOY BARS ── */
 .yoy-cards{
@@ -234,7 +222,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   <div class="metric-card">
     <div class="mc-label">Optimistic Ceiling</div>
     <div class="mc-value" id="mc-ceiling" style="color:var(--violet);">$30.55M</div>
-    <div class="mc-sub">raw &amp; booked variances model</div>
+    <div class="mc-sub">Raw &amp; Booked Variances Model</div>
   </div>
 </div>
 
@@ -265,39 +253,30 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     </div>
   </div>
 
-  <!-- ─── TAB 2: Animation View — All Models (combined static + animation) ─── -->
+  <!-- ─── TAB 2: Animation View — All Models ─── -->
   <div class="tab-panel" id="panel-2">
     <div class="anim-controls">
-      <!-- Static / Animate toggle -->
-      <div class="view-mode-toggle">
-        <button class="vm-btn active" id="vm-static" onclick="setViewMode('static')">Static</button>
-        <button class="vm-btn" id="vm-anim" onclick="setViewMode('anim')">Animate</button>
-      </div>
-      <!-- Animation-only controls, hidden when in static mode -->
-      <div class="anim-only" id="anim-only-controls" style="display:none;">
-        <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
-        <div class="speed-group">
-          <span class="ctrl-label">Speed</span>
-          <div class="pill-group" id="speed-pills">
-            <button class="ctrl-pill" data-speed="0.5">0.5×</button>
-            <button class="ctrl-pill active" data-speed="1">1×</button>
-            <button class="ctrl-pill" data-speed="2">2×</button>
-            <button class="ctrl-pill" data-speed="4">4×</button>
-          </div>
-        </div>
-        <div class="ghost-group">
-          <span class="ctrl-label">Ghost Trail</span>
-          <div class="pill-group" id="ghost-pills">
-            <button class="ctrl-pill" data-ghost="0">Off</button>
-            <button class="ctrl-pill" data-ghost="3">3 wks</button>
-            <button class="ctrl-pill active" data-ghost="5">5 wks</button>
-            <button class="ctrl-pill" data-ghost="99">All</button>
-          </div>
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <div class="speed-group">
+        <span class="ctrl-label">Speed</span>
+        <div class="pill-group" id="speed-pills">
+          <button class="ctrl-pill" data-speed="0.5">0.5×</button>
+          <button class="ctrl-pill active" data-speed="1">1×</button>
+          <button class="ctrl-pill" data-speed="2">2×</button>
+          <button class="ctrl-pill" data-speed="4">4×</button>
         </div>
       </div>
-      <!-- Scrubber always visible (works for both modes) -->
       <input type="range" class="week-scrubber" id="week-scrubber" min="0" max="12" value="12">
       <span class="scrubber-week" id="scrubber-label">3/26</span>
+      <div class="ghost-group">
+        <span class="ctrl-label">Ghost Trail</span>
+        <div class="pill-group" id="ghost-pills">
+          <button class="ctrl-pill" data-ghost="0">Off</button>
+          <button class="ctrl-pill" data-ghost="3">3 wks</button>
+          <button class="ctrl-pill active" data-ghost="5">5 wks</button>
+          <button class="ctrl-pill" data-ghost="99">All</button>
+        </div>
+      </div>
     </div>
     <div class="chart-wrap">
       <canvas id="chart-animation"></canvas>
@@ -431,12 +410,12 @@ function initTrend(){
           segment:{
             borderColor: ctx => {
               const avg = (ctx.p0.parsed.y + ctx.p1.parsed.y)/2;
-              return avg >= TARGET ? GREEN : RED;
+              return avg >= TARGET ? '#0080FF' : RED;
             }
           },
-          pointBackgroundColor: ctx => ctx.raw >= TARGET ? GREEN : RED,
-          pointBorderColor:     ctx => ctx.raw >= TARGET ? GREEN : RED,
-          borderColor:'#22c55e',
+          pointBackgroundColor: ctx => ctx.raw >= TARGET ? '#0080FF' : RED,
+          pointBorderColor:     ctx => ctx.raw >= TARGET ? '#0080FF' : RED,
+          borderColor:'#0080FF',
         },
         {
           label:'$26M Target',
@@ -468,7 +447,7 @@ function initTrend(){
             labelColor: item => {
               if(item.datasetIndex===1) return null;
               const v = item.raw;
-              const c = v>=TARGET?'#22c55e':'#FA5C5C';
+              const c = v>=TARGET?'#0080FF':'#FA5C5C';
               return {borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:2};
             }
           }
@@ -580,9 +559,10 @@ function buildLegend(){
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  ANIMATION DATA — all 5 prediction lines for each of 13 weeks
+//  ANIMATION DATA — embedded fallback (14 weeks through 4/2)
+//  liveRefresh() will overwrite this with live data from all weekly tabs
 // ══════════════════════════════════════════════════════════════════
-const ANIM_DATA = [
+let ANIM_DATA = [
   {label:'2025-12-31',short:'12/31',
    forecastVar:{total:24170360,months:[2298763,2296624,2193957,1972358,1966531,1912546,1880683,1949636,1943245,1900791,1924232,1980972]},
    rawVar:     {total:28392169,months:[2318402,2295274,2257224,2309817,2269380,2298931,2442054,2381728,2412882,2483667,2807808,3088494]},
@@ -661,7 +641,14 @@ const ANIM_DATA = [
    bookedVar:  {total:30102572,months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
    avgVar:     {total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
    rbVar:      {total:30553720,months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]}},
+  {label:'2026-4-2',short:'4/2',
+   forecastVar:{total:26882058,months:[2280521,2218606,2211370,2377035,2425518,2350129,2147532,2187573,2199586,2145313,2151977,2214951]},
+   rawVar:     {total:28673825,months:[2280430,2218606,2260795,2411832,2673123,2578611,2478858,2299879,2319068,2340886,2445095,2477480]},
+   bookedVar:  {total:30102572,months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
+   avgVar:     {total:29339184,months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
+   rbVar:      {total:30553720,months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]}},
 ];
+// NOTE: 4/2 above uses 3/26 values as placeholder — liveRefresh() will overwrite with real data
 
 // Animation series config — updated names
 const ANIM_SERIES = [
@@ -673,25 +660,9 @@ const ANIM_SERIES = [
 ];
 
 // ══════════════════════════════════════════════════════════════════
-//  COMBINED STATIC + ANIMATION (TAB 2)
+//  ANIMATION (TAB 2)
 // ══════════════════════════════════════════════════════════════════
-let chartAnim, animFrame=12, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
-let viewMode = 'static'; // 'static' or 'anim'
-
-function setViewMode(mode){
-  viewMode = mode;
-  document.getElementById('vm-static').classList.toggle('active', mode==='static');
-  document.getElementById('vm-anim').classList.toggle('active', mode==='anim');
-  document.getElementById('anim-only-controls').style.display = mode==='anim' ? 'flex' : 'none';
-  if(mode==='static'){
-    if(animPlaying){ clearInterval(animTimer); animPlaying=false; document.getElementById('play-btn').textContent='▶'; }
-    // Lock to most recent week (latest ANIM_DATA)
-    animFrame = ANIM_DATA.length - 1;
-    updateScrubber();
-    updatePills();
-  }
-  updateAnimChart();
-}
+let chartAnim, animFrame=0, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
 
 function hexToRgba(hex,a){
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
@@ -701,16 +672,12 @@ function hexToRgba(hex,a){
 function buildWeekPills(){
   const wrap = document.getElementById('week-pills');
   wrap.innerHTML='';
+  document.getElementById('week-scrubber').max = ANIM_DATA.length - 1;
   ANIM_DATA.forEach((w,i)=>{
     const btn = document.createElement('button');
     btn.className='week-pill'+(i===animFrame?' active':'');
     btn.textContent=w.short;
-    btn.onclick=()=>{
-      animFrame=i;
-      updateAnimChart();
-      updatePills();
-      updateScrubber();
-    };
+    btn.onclick=()=>{ animFrame=i; updateAnimChart(); updatePills(); updateScrubber(); };
     wrap.appendChild(btn);
   });
 }
@@ -724,7 +691,6 @@ function updateScrubber(){
 }
 
 function ghostDatasets(){
-  if(viewMode==='static') return [];
   const ghosts=[];
   const max=ghostCount===0?0:ghostCount===99?animFrame:Math.min(ghostCount,animFrame);
   for(let g=1;g<=max;g++){
@@ -762,7 +728,7 @@ function updateAnimChart(){
   chartAnim.options.plugins.title={
     display:true,
     text:`Week: ${w.label}  ·  Combined Variances: ${fmt(pred)}  ·  ${d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below'} $26M target`,
-    color:pred>=TARGET?'#22c55e':'#FA5C5C',
+    color:pred>=TARGET?'#0080FF':'#FA5C5C',
     font:{family:'Raleway',size:13,weight:'700'},padding:{bottom:10}
   };
   chartAnim.update('none');
@@ -770,7 +736,6 @@ function updateAnimChart(){
 
 function initAnimation(){
   const ctx=document.getElementById('chart-animation').getContext('2d');
-  // Default to most recent week
   animFrame = ANIM_DATA.length - 1;
 
   chartAnim=new Chart(ctx,{
@@ -796,9 +761,7 @@ function initAnimation(){
           }
         }
       },
-      scales:{
-        y:{min:1400000,max:4500000}
-      }
+      scales:{y:{min:1400000,max:4500000}}
     })
   });
   buildWeekPills();
@@ -933,7 +896,7 @@ function updateHeader(){
   document.getElementById('mc-floor').textContent   = fmt(floor);
   document.getElementById('mc-ceiling').textContent = fmt(ceil);
   const avgEl = document.getElementById('mc-avg');
-  avgEl.className = 'mc-value '+(ontrack?'green':'coral');
+  avgEl.className = 'mc-value '+(ontrack?'blue':'coral');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -997,6 +960,7 @@ async function liveRefresh(){
   btn.querySelector('.spin').textContent='↻';
   document.getElementById('status-msg').textContent='Fetching live data from Google Sheets…';
   try {
+    // ── 1. Fetch Trend tab to get all week labels
     const trendRows = await fetchGviz(TREND_GID, 'P1:AC100');
     const dataRows = trendRows.filter((r,i)=>i>=2 && r[0] && r[0]!=='Week' && String(r[0]).trim()!=='');
     if(dataRows.length > 0){
@@ -1008,13 +972,13 @@ async function liveRefresh(){
       })).filter(w=>w.total>0 && w.label !== 'Current');
 
       const latestLabel = WEEKLY_TREND[WEEKLY_TREND.length-1].label;
-      const weekRows = await fetchBySheetName(latestLabel, 'A1:Z85');
 
+      // ── 2. Fetch latest weekly tab for CURRENT_LINES
+      const weekRows = await fetchBySheetName(latestLabel, 'A1:Z85');
       const parseRow = (rows, idx) => ({
         months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
         total:  parseMoney(rows[idx]?.[16])
       });
-
       if(weekRows.length>=80){
         CURRENT_LINES.offFcst   = {...CURRENT_LINES.offFcst,   ...parseRow(weekRows,34)};
         CURRENT_LINES.rawFcst   = {...CURRENT_LINES.rawFcst,   ...parseRow(weekRows,35)};
@@ -1024,6 +988,35 @@ async function liveRefresh(){
         CURRENT_LINES.bookedVar = {...CURRENT_LINES.bookedVar, ...parseRow(weekRows,77)};
         CURRENT_LINES.avgVar    = {...CURRENT_LINES.avgVar,    ...parseRow(weekRows,78)};
         CURRENT_LINES.rbVar     = {...CURRENT_LINES.rbVar,     ...parseRow(weekRows,79)};
+      }
+
+      // ── 3. Fetch ALL weekly tabs to build a complete ANIM_DATA
+      //    Each weekly tab has the 5 prediction rows at indices 75-79 (same layout).
+      //    We fetch them in parallel for speed.
+      const animResults = await Promise.all(
+        WEEKLY_TREND.map(async w => {
+          try {
+            const rows = await fetchBySheetName(w.label, 'A1:Z85');
+            if(rows.length < 80) return null;
+            const pr = (idx) => ({
+              months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
+              total:  parseMoney(rows[idx]?.[16])
+            });
+            return {
+              label: w.label,
+              short: w.short,
+              forecastVar: pr(75),
+              rawVar:      pr(76),
+              bookedVar:   pr(77),
+              avgVar:      pr(78),
+              rbVar:       pr(79),
+            };
+          } catch(e){ return null; }
+        })
+      );
+      const freshAnimData = animResults.filter(Boolean);
+      if(freshAnimData.length > 0){
+        ANIM_DATA = freshAnimData;
       }
 
       updateHeader();
@@ -1049,7 +1042,6 @@ function rebuildAllCharts(){
   chartTrend=chartAllLines=chartAnim=chartYoY=null;
   chartsInited={0:false,1:false,2:false,3:false};
   animFrame=ANIM_DATA.length-1; animPlaying=false;
-  viewMode='static';
   const activeTab = parseInt(document.querySelector('.tab-btn.active').dataset.tab);
   initTab(activeTab);
 }
