@@ -979,46 +979,55 @@ async function liveRefresh(){
         months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
         total:  parseMoney(rows[idx]?.[16])
       });
-      // Find rows by searching column D (index 3) for known label substrings
-      // This is robust to sheet row count changes
-      const findRow = (rows, ...terms) => rows.findIndex(r => {
+      // Match sheet labels like "2026 Predicted from Forecast Variances ($26.8M)"
+      // Strategy: search col D (index 3) for keyword combos that uniquely identify each row
+      const findRowByLabel = (rows, ...keywords) => rows.findIndex(r => {
         const cell = String(r?.[3]||'').toLowerCase();
-        return terms.every(t => cell.includes(t.toLowerCase()));
+        return keywords.every(k => cell.includes(k.toLowerCase()));
       });
-      const parseRowAt = (rows, idx) => idx < 0 ? null : ({
+      const parseRowAt = (rows, idx) => ({
         months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
         total:  parseMoney(rows[idx]?.[16])
       });
-      const applyIfFound = (key, idx) => {
-        if(idx >= 0){ const d = parseRowAt(weekRows, idx); if(d && d.total > 0) CURRENT_LINES[key] = {...CURRENT_LINES[key], ...d}; }
+      const applyRow = (key, idx) => {
+        if(idx < 0) return false;
+        const d = parseRowAt(weekRows, idx);
+        if(d.total > 0){ CURRENT_LINES[key] = {...CURRENT_LINES[key], ...d}; return true; }
+        return false;
       };
 
-      // Source rows (cols E-P = indices 4-15, total col Q = index 16)
-      applyIfFound('offFcst',    findRow(weekRows, 'official', 'forecast'));
-      applyIfFound('rawFcst',    findRow(weekRows, 'raw forecast'));
-      applyIfFound('bookedProj', findRow(weekRows, 'booked project'));
+      // Prediction rows — match "Predicted from X Variances" patterns in col D
+      // "Predicted from Forecast Variances"  → forecastVar  (NOT raw, NOT booked, NOT average)
+      // "Predicted from Raw Variances"        → rawVar       (NOT booked, NOT average, NOT raw+booked)
+      // "Predicted from Booked Variances"     → bookedVar    (NOT raw)
+      // "Predicted from Average Variances"    → avgVar       (average / combined / avg)
+      // "Predicted from Raw+Booked" or "Raw & Booked" → rbVar
+      applyRow('forecastVar', findRowByLabel(weekRows, 'predicted', 'forecast variances'));
+      applyRow('rawVar',      findRowByLabel(weekRows, 'predicted', 'raw variances'));
+      // "Booked Variances" — exclude "Raw+Booked" rows
+      const bookedIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return c.includes('predicted') && c.includes('booked variances') && !c.includes('raw');
+      });
+      applyRow('bookedVar', bookedIdx);
+      applyRow('avgVar',    findRowByLabel(weekRows, 'predicted', 'average variances'));
+      // Raw+Booked: may be "Raw+Booked", "Raw & Booked", or "Raw and Booked"
+      const rbIdx = weekRows.findIndex(r => {
+        const c = String(r?.[3]||'').toLowerCase();
+        return c.includes('predicted') && (c.includes('raw+booked') || (c.includes('raw') && c.includes('booked') && !c.includes('average')));
+      });
+      applyRow('rbVar', rbIdx);
 
-      // Prediction rows — search for variance model labels
-      applyIfFound('forecastVar', findRow(weekRows, 'forecast var'));
-      applyIfFound('rawVar',      findRow(weekRows, 'raw var'));
-      applyIfFound('bookedVar',   findRow(weekRows, 'booked var'));
-      applyIfFound('avgVar',      findRow(weekRows, 'avg var', 'average var', 'combined'));
-      applyIfFound('rbVar',       findRow(weekRows, 'raw+booked', 'raw + booked', 'rb var'));
+      // Source rows
+      applyRow('offFcst',    findRowByLabel(weekRows, 'official forecast'));
+      applyRow('rawFcst',    findRowByLabel(weekRows, 'raw forecast'));
+      applyRow('bookedProj', findRowByLabel(weekRows, 'booked project'));
 
-      // Fallback: if label search found nothing, try fixed offsets from end of data
-      const tryFallback = (key, offsetFromEnd) => {
-        if(CURRENT_LINES[key].total === 0 || !CURRENT_LINES[key].months.some(v=>v>0)){
-          const idx = weekRows.length - offsetFromEnd;
-          if(idx >= 0){ const d = parseRowAt(weekRows, idx); if(d && d.total > 0) CURRENT_LINES[key] = {...CURRENT_LINES[key], ...d}; }
-        }
-      };
-      tryFallback('forecastVar', 5);
-      tryFallback('rawVar',      4);
-      tryFallback('bookedVar',   3);
-      tryFallback('avgVar',      2);
-      tryFallback('rbVar',       1);
-
-      console.log('CURRENT_LINES after parse:', Object.fromEntries(Object.entries(CURRENT_LINES).map(([k,v])=>[k,v.total])));
+      console.log('Row indices found — forecastVar:', findRowByLabel(weekRows,'predicted','forecast variances'),
+        'rawVar:', findRowByLabel(weekRows,'predicted','raw variances'),
+        'bookedVar:', bookedIdx, 'avgVar:', findRowByLabel(weekRows,'predicted','average variances'),
+        'rbVar:', rbIdx, 'total rows:', weekRows.length);
+      console.log('CURRENT_LINES totals:', Object.fromEntries(Object.entries(CURRENT_LINES).map(([k,v])=>[k,v.total])));
 
       // ── 3. Fetch ALL weekly tabs to build a complete ANIM_DATA
       //    Each weekly tab has the 5 prediction rows at indices 75-79 (same layout).
@@ -1032,25 +1041,27 @@ async function liveRefresh(){
               months: [4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),
               total:  parseMoney(rows[idx]?.[16])
             });
-            const findR = (rows, ...terms) => rows.findIndex(r => {
-              const cell = String(r?.[3]||'').toLowerCase();
-              return terms.every(t => cell.includes(t.toLowerCase()));
+            const findLbl = (...keywords) => rows.findIndex(r => {
+              const c = String(r?.[3]||'').toLowerCase();
+              return keywords.every(k => c.includes(k.toLowerCase()));
             });
-            const getRow = (...terms) => {
-              const idx = findR(rows, ...terms);
-              return idx >= 0 ? prAt(idx) : null;
-            };
-            const getRowOrOffset = (offsetFromEnd, ...terms) => {
-              return getRow(...terms) || prAt(rows.length - offsetFromEnd);
-            };
+            const bookedOnlyIdx = rows.findIndex(r => {
+              const c = String(r?.[3]||'').toLowerCase();
+              return c.includes('predicted') && c.includes('booked variances') && !c.includes('raw');
+            });
+            const rbOnlyIdx = rows.findIndex(r => {
+              const c = String(r?.[3]||'').toLowerCase();
+              return c.includes('predicted') && (c.includes('raw+booked') || (c.includes('raw') && c.includes('booked') && !c.includes('average')));
+            });
+            const safe = (idx) => idx >= 0 ? prAt(idx) : {months:Array(12).fill(0),total:0};
             return {
               label: w.label,
               short: w.short,
-              forecastVar: getRowOrOffset(5, 'forecast var'),
-              rawVar:      getRowOrOffset(4, 'raw var'),
-              bookedVar:   getRowOrOffset(3, 'booked var'),
-              avgVar:      getRowOrOffset(2, 'avg var', 'average var', 'combined'),
-              rbVar:       getRowOrOffset(1, 'raw+booked', 'raw + booked', 'rb var'),
+              forecastVar: safe(findLbl('predicted','forecast variances')),
+              rawVar:      safe(findLbl('predicted','raw variances')),
+              bookedVar:   safe(bookedOnlyIdx),
+              avgVar:      safe(findLbl('predicted','average variances')),
+              rbVar:       safe(rbOnlyIdx),
             };
           } catch(e){ return null; }
         })
@@ -1066,7 +1077,11 @@ async function liveRefresh(){
       const now = new Date();
       document.getElementById('data-ts').textContent = `Live · ${now.toLocaleTimeString()}`;
       const avgTotal = CURRENT_LINES.avgVar.total;
-      document.getElementById('status-msg').innerHTML = `Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · combined model: <strong style="color:var(--teal)">${fmt(avgTotal)}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      const fvTotal  = CURRENT_LINES.forecastVar.total;
+      const rvTotal  = CURRENT_LINES.rawVar.total;
+      const bvTotal  = CURRENT_LINES.bookedVar.total;
+      const rbTotal  = CURRENT_LINES.rbVar.total;
+      document.getElementById('status-msg').innerHTML = `Live · <strong style="color:var(--white)">${WEEKLY_TREND.length} wks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> &nbsp;|&nbsp; Combined: <strong style="color:var(--white)">${fmt(avgTotal)}</strong> · Fcst: <strong style="color:#9484FF">${fmt(fvTotal)}</strong> · Raw: <strong style="color:#73F2E5">${fmt(rvTotal)}</strong> · Booked: <strong style="color:#0080FF">${fmt(bvTotal)}</strong> · R+B: <strong style="color:#FA5C5C">${fmt(rbTotal)}</strong> &nbsp;·&nbsp; <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   } catch(e){
