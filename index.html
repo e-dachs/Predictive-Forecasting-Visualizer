@@ -468,11 +468,11 @@ function initTrend(){
 //  TAB 1 — CURRENT MONTHLY VIEW — ALL MODELS
 // ══════════════════════════════════════════════════════════════════
 const SERIES_CONFIG = [
-  {key:'avgVar',    color:'#0080FF', width:2.5, dash:[], label:'Combined Variances Model',           group:'predicted'},
-  {key:'forecastVar',color:'#CFC7D4',width:1.8, dash:[], label:'Official Forecast Variances Model',  group:'predicted'},
-  {key:'rawVar',    color:'#7fc7ed', width:1.8, dash:[], label:'Raw Forecast Variances Model',        group:'predicted'},
-  {key:'bookedVar', color:'#73F2E5', width:1.8, dash:[], label:'Booked Variances Model',              group:'predicted'},
-  {key:'rbVar',     color:'#9484FF', width:1.8, dash:[], label:'Raw & Booked Variances Model',        group:'predicted'},
+  {key:'avgVar',    color:'#000000', width:2.5, dash:[], label:'Combined Variances Model',           group:'predicted'},
+  {key:'forecastVar',color:'#9484FF',width:1.8, dash:[], label:'Official Forecast Variances Model',  group:'predicted'},
+  {key:'rawVar',    color:'#73F2E5', width:1.8, dash:[], label:'Raw Forecast Variances Model',        group:'predicted'},
+  {key:'bookedVar', color:'#0080FF', width:1.8, dash:[], label:'Booked Variances Model',              group:'predicted'},
+  {key:'rbVar',     color:'#FA5C5C', width:1.8, dash:[], label:'Raw & Booked Variances Model',        group:'predicted'},
   {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Official Forecast / Budget',      group:'source'},
   {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Backlog + Pipeline',              group:'source'},
   {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Backlog Only',        group:'source'},
@@ -652,11 +652,11 @@ let ANIM_DATA = [
 
 // Animation series config — updated names
 const ANIM_SERIES = [
-  {key:'forecastVar',color:'#CFC7D4',label:'Official Forecast Variances Model', width:1.8},
-  {key:'rawVar',     color:'#7fc7ed',label:'Raw Forecast Variances Model',       width:1.8},
-  {key:'bookedVar',  color:'#73F2E5',label:'Booked Variances Model',             width:1.8},
-  {key:'avgVar',     color:'#0080FF',label:'Combined Variances Model',           width:2.8},
-  {key:'rbVar',      color:'#9484FF',label:'Raw & Booked Variances Model',       width:1.8},
+  {key:'forecastVar',color:'#9484FF',label:'Official Forecast Variances Model', width:1.8},
+  {key:'rawVar',     color:'#73F2E5',label:'Raw Forecast Variances Model',       width:1.8},
+  {key:'bookedVar',  color:'#0080FF',label:'Booked Variances Model',             width:1.8},
+  {key:'avgVar',     color:'#000000',label:'Combined Variances Model',           width:2.8},
+  {key:'rbVar',      color:'#FA5C5C',label:'Raw & Booked Variances Model',       width:1.8},
 ];
 
 // ══════════════════════════════════════════════════════════════════
@@ -830,11 +830,11 @@ function initYoY(){
   datasets.push({
     label:'2026 (Combined Variances Model)',
     data: CURRENT_LINES.avgVar.months,
-    borderColor:'#0080FF',
+    borderColor:'#000000',
     borderWidth:2.2,
     borderDash:[7,4],
     pointRadius:4,
-    pointBackgroundColor:'#0080FF',
+    pointBackgroundColor:'#000000',
     tension:0.3, fill:false,
   });
 
@@ -862,7 +862,7 @@ function buildYoYCards(){
   const maxTotal = Math.max(...[2022,2023,2024,2025].map(y=>YOY[y].total), CURRENT_LINES.avgVar.total);
   const entries = [
     ...Object.entries(YOY).map(([y,d])=>({year:y,total:d.total,color:d.color,label:'Actual',months:d.months})),
-    {year:'2026',total:CURRENT_LINES.avgVar.total,color:'#0080FF',label:'Prediction',months:CURRENT_LINES.avgVar.months}
+    {year:'2026',total:CURRENT_LINES.avgVar.total,color:'#000000',label:'Prediction',months:CURRENT_LINES.avgVar.months}
   ];
   entries.forEach(e=>{
     const card = document.createElement('div');
@@ -1031,6 +1031,9 @@ async function liveRefresh(){
     console.warn('Live fetch failed:', e);
     document.getElementById('status-msg').innerHTML = `Refresh failed (CORS or network) — showing embedded data · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Sheet ↗</a>`;
     document.getElementById('status-dot').className='status-dot';
+    // Ensure charts still render from embedded data on failure
+    updateHeader();
+    rebuildAllCharts();
   } finally {
     btn.classList.remove('loading');
     btn.querySelector('.spin').textContent='↻';
@@ -1038,20 +1041,22 @@ async function liveRefresh(){
 }
 
 function rebuildAllCharts(){
+  const wasInited = {...chartsInited};
   [chartTrend, chartAllLines, chartAnim, chartYoY].forEach(c=>{ try{ if(c) c.destroy(); }catch(e){} });
   chartTrend=chartAllLines=chartAnim=chartYoY=null;
   chartsInited={0:false,1:false,2:false,3:false};
   animFrame=ANIM_DATA.length-1; animPlaying=false;
   const activeTab = parseInt(document.querySelector('.tab-btn.active').dataset.tab);
   initTab(activeTab);
+  [0,1,2,3].forEach(t => { if(t !== activeTab && wasInited[t]) initTab(t); });
 }
 
 // ══════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════
 updateHeader();
-initTab(0);
-setTimeout(liveRefresh, 800);
+// Attempt live refresh immediately; fall back to embedded data if it fails
+liveRefresh().catch(()=>{ initTab(0); });
 </script>
 </body>
 </html>
