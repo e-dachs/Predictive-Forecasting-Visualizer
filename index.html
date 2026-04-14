@@ -222,7 +222,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   <div class="metric-card">
     <div class="mc-label">Optimistic Ceiling</div>
     <div class="mc-value" id="mc-ceiling" style="color:var(--violet);">$30.55M</div>
-    <div class="mc-sub">Raw &amp; Booked Variances Model</div>
+    <div class="mc-sub">raw &amp; booked variances model</div>
   </div>
 </div>
 
@@ -728,7 +728,7 @@ function updateAnimChart(){
   chartAnim.options.plugins.title={
     display:true,
     text:`Week: ${w.label}  ·  Combined Variances: ${fmt(pred)}  ·  ${d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below'} $26M target`,
-    color:pred>=TARGET?'#0080FF':'#FA5C5C',
+    color:'#FFFFFF',
     font:{family:'Raleway',size:13,weight:'700'},padding:{bottom:10}
   };
   chartAnim.update('none');
@@ -1076,12 +1076,7 @@ async function liveRefresh(){
 
       const now = new Date();
       document.getElementById('data-ts').textContent = `Live · ${now.toLocaleTimeString()}`;
-      const avgTotal = CURRENT_LINES.avgVar.total;
-      const fvTotal  = CURRENT_LINES.forecastVar.total;
-      const rvTotal  = CURRENT_LINES.rawVar.total;
-      const bvTotal  = CURRENT_LINES.bookedVar.total;
-      const rbTotal  = CURRENT_LINES.rbVar.total;
-      document.getElementById('status-msg').innerHTML = `Live · <strong style="color:var(--white)">${WEEKLY_TREND.length} wks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> &nbsp;|&nbsp; Combined: <strong style="color:var(--white)">${fmt(avgTotal)}</strong> · Fcst: <strong style="color:#9484FF">${fmt(fvTotal)}</strong> · Raw: <strong style="color:#73F2E5">${fmt(rvTotal)}</strong> · Booked: <strong style="color:#0080FF">${fmt(bvTotal)}</strong> · R+B: <strong style="color:#FA5C5C">${fmt(rbTotal)}</strong> &nbsp;·&nbsp; <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      document.getElementById('status-msg').innerHTML = `Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   } catch(e){
