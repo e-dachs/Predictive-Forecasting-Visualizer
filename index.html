@@ -258,10 +258,12 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
       </div>
     </div>
     <div class="chart-wrap"><canvas id="chart-animation"></canvas></div>
+    <p style="padding:8px 28px 0;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">👇 Click any model name in the legend above to show or hide that line</p>
     <div class="week-pills-wrap" id="week-pills"></div>
   </div>
 
   <div class="tab-panel" id="panel-3">
+    <p style="padding:0 28px 14px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">👇 Click any year in the legend to show or hide that line</p>
     <div class="chart-wrap"><canvas id="chart-yoy"></canvas></div>
     <div class="yoy-cards" id="yoy-cards"></div>
   </div>
@@ -403,7 +405,7 @@ function buildLegend(){
 
   const hint = document.createElement('div');
   hint.className = 'legend-click-hint';
-  hint.innerHTML = '<span class="legend-click-hint-icon">👆</span> Click any label to show or hide that line';
+  hint.innerHTML = '<span class="legend-click-hint-icon">👇</span> Click any label to show or hide that line';
   wrap.appendChild(hint);
 
   const groupsWrap = document.createElement('div');
