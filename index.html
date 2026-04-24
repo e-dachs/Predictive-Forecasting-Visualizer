@@ -310,9 +310,9 @@ let CURRENT_LINES = {
   bookedVar:   {label:'Booked Variances Model',            total:30102572, months:[2280521,2218606,2260795,2404483,2482965,2453159,2567386,2748869,2827920,3229531,3311208,3537336]},
   avgVar:      {label:'Combined Variances Model',          total:29339184, months:[2280491,2218606,2244320,2397783,2527202,2460633,2397926,2412107,2448858,2571910,2636093,2743255]},
   rbVar:       {label:'Raw & Booked Variances Model',      total:30553720, months:[2280476,2218606,2260795,2408158,2578044,2515885,2523122,2524374,2573494,2785208,2878152,3007408]},
-  offFcst:     {label:'Official Forecast / Budget',        total:27148021, months:[2280521,2218606,2215585,2398899,2427200,2407211,2200000,2200000,2200000,2200000,2200000,2200000]},
-  rawFcst:     {label:'Backlog + Pipeline',                total:27163312, months:[2280521,2218606,2250585,2409333,2757900,2781858,2540504,2321286,2170771,1924105,1786308,1721536]},
-  bookedProj:  {label:'Backlog Only',                      total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
+  offFcst:     {label:'Forecast / Budget',  total:27148021, months:[2280521,2218606,2215585,2398899,2427200,2407211,2200000,2200000,2200000,2200000,2200000,2200000]},
+  rawFcst:     {label:'Raw Forecast',        total:27163312, months:[2280521,2218606,2250585,2409333,2757900,2781858,2540504,2321286,2170771,1924105,1786308,1721536]},
+  bookedProj:  {label:'Booked Revenue',      total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
 };
 
 const YOY = {
@@ -382,9 +382,9 @@ const SERIES_CONFIG = [
   {key:'rawVar',    color:'#73F2E5', width:1.8, dash:[], label:'Raw Forecast Variances Model',       group:'predicted'},
   {key:'bookedVar', color:'#0080FF', width:1.8, dash:[], label:'Booked Variances Model',             group:'predicted'},
   {key:'rbVar',     color:'#FA5C5C', width:1.8, dash:[], label:'Raw & Booked Variances Model',       group:'predicted'},
-  {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Official Forecast / Budget',     group:'source'},
-  {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Backlog + Pipeline',             group:'source'},
-  {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Backlog Only',       group:'source'},
+  {key:'offFcst',   color:'#FA5C5C', width:1.5, dash:[6,4], label:'Forecast / Budget',  group:'source'},
+  {key:'rawFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Raw Forecast',        group:'source'},
+  {key:'bookedProj',color:'rgba(115,242,229,0.55)',width:1.5,dash:[6,4],label:'Booked Revenue', group:'source'},
 ];
 
 let chartAllLines;
@@ -609,10 +609,10 @@ async function liveRefresh(){
       const avIdx=weekRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});
       const rbIdx=weekRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});
       apply('forecastVar',fvIdx);apply('rawVar',rvIdx);apply('bookedVar',bkIdx);apply('avgVar',avIdx);apply('rbVar',rbIdx);
-      const srcRow=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&kw.every(k=>c.includes(k.toLowerCase()));});
-      apply('offFcst',srcRow(weekRows,'official forecast'));
-      apply('rawFcst',weekRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('raw forecast')&&!c.includes('variances');}));
-      apply('bookedProj',weekRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('booked')&&!c.includes('variances');}));
+      const srcRow=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return kw.every(k=>c.includes(k.toLowerCase()));});
+      apply('offFcst',srcRow(weekRows,'2026 forecast'));
+      apply('rawFcst',srcRow(weekRows,'2026 raw forecast'));
+      apply('bookedProj',srcRow(weekRows,'2026 booked revenue'));
       const animResults=await Promise.all(WEEKLY_TREND.map(async w=>{try{const rows=await fetchBySheetName(w.label,'A1:Z100');if(rows.length<10)return null;const prAt=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),total:parseMoney(rows[idx]?.[16])});const safe=(idx)=>idx>=0?prAt(idx):{months:Array(12).fill(0),total:0};const find=(fn)=>rows.findIndex(fn);const afv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('forecast variances')&&!c.includes('raw');});const arv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('raw variances')&&!c.includes('booked');});const abk=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('booked variances')&&!c.includes('raw');});const aav=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});const arb=find(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});return{label:w.label,short:w.short,forecastVar:safe(afv),rawVar:safe(arv),bookedVar:safe(abk),avgVar:safe(aav),rbVar:safe(arb)};}catch(e){return null;}}));
       const fresh=animResults.filter(Boolean);if(fresh.length>0)ANIM_DATA=fresh;
 
@@ -642,10 +642,10 @@ async function liveRefresh(){
             // Also update CURRENT_LINES from this tab so cards/all-models reflect latest
             const applyC=(key,idx)=>{if(idx<0)return;const d=prAtCur(idx);if(d.total>0)CURRENT_LINES[key]={...CURRENT_LINES[key],...d};};
             applyC('forecastVar',cafv);applyC('rawVar',carv);applyC('bookedVar',cabk);applyC('avgVar',caav);applyC('rbVar',carb);
-            const srcCur=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&kw.every(k=>c.includes(k.toLowerCase()));});
-            applyC('offFcst',srcCur(curRows,'official forecast'));
-            applyC('rawFcst',curRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('raw forecast')&&!c.includes('variances');}));
-            applyC('bookedProj',curRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('booked')&&!c.includes('variances');}));
+            const srcCur=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return kw.every(k=>c.includes(k.toLowerCase()));});
+            applyC('offFcst',srcCur(curRows,'2026 forecast'));
+            applyC('rawFcst',srcCur(curRows,'2026 raw forecast'));
+            applyC('bookedProj',srcCur(curRows,'2026 booked revenue'));
           }
         }
       }catch(e){console.warn('Current tab fetch failed:',e);}
