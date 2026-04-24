@@ -257,7 +257,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
         </div>
       </div>
     </div>
-    <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">👇 Click any model name in the legend above to show or hide that line</p>
+    <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;text-align:center;">👇 Click any model name in the legend below to show or hide that line</p>
     <div class="chart-wrap"><canvas id="chart-animation"></canvas></div>
     <div class="week-pills-wrap" id="week-pills"></div>
   </div>
@@ -539,7 +539,8 @@ function buildYoYCards(){
 
 // ── HEADER — dynamic floor/ceiling
 function updateHeader(){
-  const latest=WEEKLY_TREND[WEEKLY_TREND.length-1];
+  const datedWeeks=WEEKLY_TREND.filter(w=>w.label!=='Current');
+  const latest=datedWeeks[datedWeeks.length-1];
   const pred=CURRENT_LINES.avgVar.total;
   const ontrack=pred>=TARGET;
 
@@ -551,7 +552,7 @@ function updateHeader(){
     if(CURRENT_LINES[key].total > CURRENT_LINES[ceilKey].total)  ceilKey=key;
   });
 
-  document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.length;
+  document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.filter(w=>w.label!=='Current').length;
   document.getElementById('hdr-week').textContent=latest.label;
   document.getElementById('mc-week').textContent=latest.label;
   document.getElementById('mc-avg').textContent=fmt(pred);
