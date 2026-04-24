@@ -673,8 +673,16 @@ function rebuildAllCharts(){
   [0,1,2,3].forEach(t=>{if(t!==active&&was[t])initTab(t);});
 }
 
-updateHeader();
-liveRefresh().catch(()=>{initTab(0);});
+// ── INIT — blank cards until live data arrives, then fetch
+document.getElementById('hdr-weeks').textContent='—';
+document.getElementById('hdr-week').textContent='—';
+document.getElementById('mc-week').textContent='—';
+document.getElementById('mc-avg').textContent='—';
+document.getElementById('mc-floor').textContent='—';
+document.getElementById('mc-floor-sub').textContent='loading…';
+document.getElementById('mc-ceiling').textContent='—';
+document.getElementById('mc-ceiling-sub').textContent='loading…';
+liveRefresh().catch(()=>{ updateHeader(); initTab(0); });
 </script>
 </body>
 </html>
