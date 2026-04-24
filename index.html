@@ -215,10 +215,10 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     Click a tab to explore different charts
   </div>
   <nav class="tabs-nav">
-    <button class="tab-btn active" data-tab="0"><span class="tab-icon">📈</span> Yearly Forecast by Week</button>
-    <button class="tab-btn" data-tab="1"><span class="tab-icon">〰️</span> Current Monthly View — All Models</button>
+    <button class="tab-btn active" data-tab="0"> Yearly Forecast by Week</button>
+    <button class="tab-btn" data-tab="1"> Current Monthly View — All Models</button>
     <button class="tab-btn" data-tab="2"><span class="tab-icon">▶</span> Animation View — All Models</button>
-    <button class="tab-btn" data-tab="3"><span class="tab-icon">📅</span> Monthly Year Over Year</button>
+    <button class="tab-btn" data-tab="3"> Monthly Year Over Year</button>
   </nav>
 
   <div class="tab-panel active" id="panel-0">
@@ -357,14 +357,16 @@ function initTrend(){
     data:{labels,datasets:[
       {label:'Combined Variances Prediction',data:vals,borderWidth:2.5,pointRadius:5,pointHoverRadius:7,tension:0.3,fill:false,
        segment:{borderColor:ctx=>{const avg=(ctx.p0.parsed.y+ctx.p1.parsed.y)/2;return avg>=TARGET?'#0080FF':'#FA5C5C';}},
-       pointBackgroundColor:ctx=>ctx.raw>=TARGET?'#0080FF':'#FA5C5C',
-       pointBorderColor:ctx=>ctx.raw>=TARGET?'#0080FF':'#FA5C5C',borderColor:'#0080FF'},
+       pointBackgroundColor:ctx=>{const isCurrent=WEEKLY_TREND[ctx.dataIndex]?.label==='Current';return isCurrent?'transparent':ctx.raw>=TARGET?'#0080FF':'#FA5C5C';},
+       pointBorderColor:ctx=>ctx.raw>=TARGET?'#0080FF':'#FA5C5C',
+       pointBorderWidth:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?2.5:1,
+       pointRadius:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?7:5,borderColor:'#0080FF'},
       {label:'$26M Target',data:Array(vals.length).fill(TARGET),borderColor:'rgba(255,255,255,0.22)',borderDash:[8,5],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:deepMerge(CHART_COMMON,{
       interaction:{mode:'index',intersect:false},
       plugins:{tooltip:{callbacks:{
-        title:items=>WEEKLY_TREND[items[0].dataIndex].label,
+        title:items=>{const w=WEEKLY_TREND[items[0].dataIndex];return w.label==='Current'?'Current (in progress)':w.label;},
         label:item=>{if(item.datasetIndex===1)return null;const v=item.raw,d=v-TARGET,sign=d>=0?'↑ +':'↓ ';return[` Prediction: ${fmt(v)}`,` Delta: ${sign}${fmt(Math.abs(d))} vs $26M target`];},
         labelColor:item=>{if(item.datasetIndex===1)return null;const c=item.raw>=TARGET?'#0080FF':'#FA5C5C';return{borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:2};}
       }}},
@@ -612,9 +614,43 @@ async function liveRefresh(){
       apply('bookedProj',weekRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('booked')&&!c.includes('variances');}));
       const animResults=await Promise.all(WEEKLY_TREND.map(async w=>{try{const rows=await fetchBySheetName(w.label,'A1:Z100');if(rows.length<10)return null;const prAt=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),total:parseMoney(rows[idx]?.[16])});const safe=(idx)=>idx>=0?prAt(idx):{months:Array(12).fill(0),total:0};const find=(fn)=>rows.findIndex(fn);const afv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('forecast variances')&&!c.includes('raw');});const arv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('raw variances')&&!c.includes('booked');});const abk=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('booked variances')&&!c.includes('raw');});const aav=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});const arb=find(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});return{label:w.label,short:w.short,forecastVar:safe(afv),rawVar:safe(arv),bookedVar:safe(abk),avgVar:safe(aav),rbVar:safe(arb)};}catch(e){return null;}}));
       const fresh=animResults.filter(Boolean);if(fresh.length>0)ANIM_DATA=fresh;
+
+      // ── Fetch "Current" tab — always the latest in-progress week, appended to end
+      try{
+        const curRows=await fetchBySheetName('Current','A1:Z100');
+        if(curRows.length>=10){
+          // Extract avgVar total for the trend line (same column layout as weekly tabs)
+          const prAtCur=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(curRows[idx]?.[c])),total:parseMoney(curRows[idx]?.[16])});
+          const safeCur=(idx)=>idx>=0?prAtCur(idx):{months:Array(12).fill(0),total:0};
+          const findCur=(fn)=>curRows.findIndex(fn);
+          const cafv=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('forecast variances')&&!c.includes('raw');});
+          const carv=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('raw variances')&&!c.includes('booked');});
+          const cabk=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('booked variances')&&!c.includes('raw');});
+          const caav=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});
+          const carb=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});
+          const curAvg=safeCur(caav);
+          if(curAvg.total>0){
+            // Append to WEEKLY_TREND as "Current"
+            WEEKLY_TREND.push({label:'Current',short:'Now',total:curAvg.total,months:curAvg.months});
+            // Append to ANIM_DATA
+            ANIM_DATA.push({
+              label:'Current',short:'Now',
+              forecastVar:safeCur(cafv),rawVar:safeCur(carv),
+              bookedVar:safeCur(cabk),avgVar:curAvg,rbVar:safeCur(carb)
+            });
+            // Also update CURRENT_LINES from this tab so cards/all-models reflect latest
+            const applyC=(key,idx)=>{if(idx<0)return;const d=prAtCur(idx);if(d.total>0)CURRENT_LINES[key]={...CURRENT_LINES[key],...d};};
+            applyC('forecastVar',cafv);applyC('rawVar',carv);applyC('bookedVar',cabk);applyC('avgVar',caav);applyC('rbVar',carb);
+            const srcCur=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&kw.every(k=>c.includes(k.toLowerCase()));});
+            applyC('offFcst',srcCur(curRows,'official forecast'));
+            applyC('rawFcst',curRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('raw forecast')&&!c.includes('variances');}));
+            applyC('bookedProj',curRows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return!c.includes('predicted')&&c.includes('booked')&&!c.includes('variances');}));
+          }
+        }
+      }catch(e){console.warn('Current tab fetch failed:',e);}
       updateHeader();rebuildAllCharts();
       const now=new Date();document.getElementById('data-ts').textContent=`Live · ${now.toLocaleTimeString()}`;
-      document.getElementById('status-msg').innerHTML=`Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> · latest: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      document.getElementById('status-msg').innerHTML=`Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> (incl. Current) · latest closed: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   }catch(e){
