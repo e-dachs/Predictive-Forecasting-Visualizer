@@ -632,10 +632,10 @@ async function liveRefresh(){
           const curAvg=safeCur(caav);
           if(curAvg.total>0){
             // Append to WEEKLY_TREND as "Current"
-            WEEKLY_TREND.push({label:'Current',short:'Now',total:curAvg.total,months:curAvg.months});
+            WEEKLY_TREND.push({label:'Current',short:'Current',total:curAvg.total,months:curAvg.months});
             // Append to ANIM_DATA
             ANIM_DATA.push({
-              label:'Current',short:'Now',
+              label:'Current',short:'Current',
               forecastVar:safeCur(cafv),rawVar:safeCur(carv),
               bookedVar:safeCur(cabk),avgVar:curAvg,rbVar:safeCur(carb)
             });
