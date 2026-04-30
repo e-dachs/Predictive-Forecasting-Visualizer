@@ -544,6 +544,7 @@ function updateAnimChart(){
     hidden:!!animHidden[s.key],
   }));
   chartAnim.data.datasets=[...ghostDatasets(),...current];
+  const pred=w.rbVar.total,d=pred-TARGET;
   const weekTitle = w.label === 'Current' ? 'Week: Current' : 'Week: ' + w.label;
   chartAnim.options.plugins.title={display:true,
     text:weekTitle+'  ·  Raw & Booked: '+fmt(pred)+'  ·  '+(d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below')+' $26M target',
