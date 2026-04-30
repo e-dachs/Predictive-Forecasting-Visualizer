@@ -230,7 +230,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 
   <div class="tab-panel" id="panel-1">
     <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">
-      Shaded cone = &plusmn;15% uncertainty band around the <span style="color:#FA5C5C;font-weight:800;">Raw &amp; Booked</span> model &mdash; pinched at Mar, fans to full width by Dec
+      Shaded cone = &plusmn;7% uncertainty band around the <span style="color:#FA5C5C;font-weight:800;">Raw &amp; Booked</span> model &mdash; pinched at Mar, fans to full width by Dec
     </p>
     <div id="legend-alllines" class="legend-wrap"></div>
     <div class="chart-wrap"><canvas id="chart-alllines"></canvas></div>
@@ -393,7 +393,7 @@ const SERIES_CONFIG = [
 let chartAllLines;
 
 // Cone centered on rbVar, equidistant above & below. Locked Jan-Mar, fans to ±15% by Dec.
-const CONE_LOCK = 2, CONE_MAX = 0.15;
+const CONE_LOCK = 2, CONE_MAX = 0.07;
 function coneHalf(i){ return i <= CONE_LOCK ? 0 : ((i-CONE_LOCK)/(11-CONE_LOCK))*CONE_MAX; }
 
 function buildConeDatasets(){
