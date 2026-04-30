@@ -380,12 +380,12 @@ function initTrend(){
 
 // ── TAB 1
 const SERIES_CONFIG = [
-  {key:'avgVar',    color:'#FFFFFF', width:2.5, dash:[], label:'Combined Variances Model',          group:'predicted'},
-  {key:'forecastVar',color:'#9484FF',width:1.8, dash:[], label:'Official Forecast Variances Model', group:'predicted'},
+  {key:'avgVar',    color:'#FFFFFF', width:2.5, dash:[], label:'Combined Variances Model',          group:'predicted', defaultHidden:true},
+  {key:'forecastVar',color:'#9484FF',width:1.8, dash:[], label:'Official Forecast Variances Model', group:'predicted', defaultHidden:true},
   {key:'rawVar',    color:'#73F2E5', width:1.8, dash:[], label:'Raw Forecast Variances Model',       group:'predicted'},
   {key:'bookedVar', color:'#0080FF', width:1.8, dash:[], label:'Booked Variances Model',             group:'predicted'},
   {key:'rbVar',     color:'#FA5C5C', width:1.8, dash:[], label:'Raw & Booked Variances Model',       group:'predicted'},
-  {key:'offFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Forecast / Budget',  group:'source'},
+  {key:'offFcst',   color:'#AF23AC', width:1.5, dash:[6,4], label:'Forecast / Budget',  group:'source', defaultHidden:true},
   {key:'rawFcst',   color:'#2E8B57', width:1.5, dash:[6,4], label:'Raw Forecast',        group:'source'},
   {key:'bookedProj',color:'#1B9CC4', width:1.5, dash:[6,4], label:'Booked Revenue',      group:'source'},
 ];
@@ -459,6 +459,15 @@ function initAllLines(){
       }}}
     })
   });
+
+  // Hide defaultHidden series immediately after chart creation
+  SERIES_CONFIG.forEach(s => {
+    if (!s.defaultHidden) return;
+    const idx = chartAllLines.data.datasets.findIndex(d => d.label === s.label);
+    if (idx >= 0) chartAllLines.getDatasetMeta(idx).hidden = true;
+  });
+  chartAllLines.update('none');
+
   buildLegend();
 }
 
@@ -494,7 +503,8 @@ function buildLegend(){
       txt.textContent = s.label;
       const action = document.createElement('span');
       action.className = 'legend-action';
-      action.textContent = 'hide';
+      action.textContent = s.defaultHidden ? 'show' : 'hide';
+      if (s.defaultHidden) item.classList.add('hidden');
       item.appendChild(dot); item.appendChild(txt); item.appendChild(action);
       item.addEventListener('click', ()=>{
         const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
