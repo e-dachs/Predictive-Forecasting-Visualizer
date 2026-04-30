@@ -261,7 +261,6 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
       </div>
     </div>
     <div id="legend-anim" class="legend-wrap"></div>
-    <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">&#128071; Click any label to show or hide that line</p>
     <div class="chart-wrap"><canvas id="chart-animation"></canvas></div>
     <div class="week-pills-wrap" id="week-pills"></div>
   </div>
@@ -509,13 +508,12 @@ let ANIM_DATA = [
 ];
 
 const ANIM_SERIES = [
-  {key:'forecastVar',color:'#9484FF',label:'Official Forecast Variances Model',width:1.8},
+  {key:'avgVar',     color:'#FFFFFF',label:'Combined Variances Model',          width:2.8},
+  {key:'forecastVar',color:'#9484FF',label:'Official Forecast Variances Model', width:1.8},
   {key:'rawVar',     color:'#73F2E5',label:'Raw Forecast Variances Model',      width:1.8},
   {key:'bookedVar',  color:'#0080FF',label:'Booked Variances Model',            width:1.8},
-  {key:'avgVar',     color:'#FFFFFF',label:'Combined Variances Model',          width:2.8},
   {key:'rbVar',      color:'#FA5C5C',label:'Raw & Booked Variances Model',      width:1.8},
 ];
-
 // ── ANIMATION
 let chartAnim, animFrame=0, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
 const animHidden={}; // persistent visibility state, keyed by series key
@@ -546,10 +544,10 @@ function updateAnimChart(){
     hidden:!!animHidden[s.key],
   }));
   chartAnim.data.datasets=[...ghostDatasets(),...current];
-  const pred=w.rbVar.total,d=pred-TARGET;
+  const weekTitle = w.label === 'Current' ? 'Week: Current' : 'Week: ' + w.label;
   chartAnim.options.plugins.title={display:true,
-    text:'Week: '+w.label+'  ·  Raw & Booked: '+fmt(pred)+'  ·  '+(d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below')+' $26M target',
-    color:'#FA5C5C',font:{family:'Raleway',size:13,weight:'700'},padding:{bottom:10}};
+    text:weekTitle+'  ·  Raw & Booked: '+fmt(pred)+'  ·  '+(d>=0?'↑ +'+fmt(d)+' above':'↓ '+fmt(Math.abs(d))+' below')+' $26M target',
+    color:'#FFFFFF',font:{family:'Raleway',size:13,weight:'700'},padding:{bottom:10}};
   chartAnim.update('none');
 }
 
