@@ -429,7 +429,7 @@ function initAllLines(){
           const i=items[0].dataIndex,h=coneHalf(i);
           if(h===0)return ['  -- Cone: locked month'];
           const v=CURRENT_LINES.rbVar.months[i],pct=(h*100).toFixed(0);
-          return ['  -- Uncertainty cone (+-'+pct+'% of Raw & Booked)','  Upper: '+fmtK(v*(1+h)),'  Lower: '+fmtK(v*(1-h)),'  Range: '+fmtK(v*h*2)];
+          return ['  -- Confidence band (+-'+pct+'% of Raw & Booked)','  Upper: '+fmtK(v*(1+h)),'  Lower: '+fmtK(v*(1-h)),'  Range: '+fmtK(v*h*2)];
         }
       }}}
     })
