@@ -192,11 +192,13 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     <div class="mc-value blue" id="mc-week" style="font-size:20px;">2026-3-26</div>
     <div class="mc-sub">latest data snapshot</div>
   </div>
-  <div class="metric-card hero">
-    <div class="mc-label">Current Yearly Prediction</div>
-    <div class="mc-value green" id="mc-avg" style="font-size:24px;">$29.34M - $31.68M</div>
-    <div class="mc-sub" id="mc-avg-sub">Raw &amp; Booked: $30.55M &middot; monthly uncertainty cone</div>
+<div class="metric-card hero" id="mc-prediction-card">
+  <div class="mc-label">Current Yearly Prediction</div>
+  <div class="mc-value coral" id="mc-avg">$—</div>
+  <div class="mc-sub" id="mc-avg-sub">
+    raw & booked model: <strong>$—</strong>
   </div>
+</div>
   <div class="metric-card">
     <div class="mc-label">Conservative Floor</div>
     <div class="mc-value" id="mc-floor">$26.88M</div>
@@ -647,9 +649,10 @@ function updateHeader(){
   document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.filter(w=>w.label!=='Current').length;
   document.getElementById('hdr-week').textContent=latest.label;
   document.getElementById('mc-week').textContent=latest.label;
-  document.getElementById('mc-avg').textContent=fmt(rbLower)+' - '+fmt(rbUpper);
-  document.getElementById('mc-avg').className='mc-value '+(ontrack?'green':'coral');
-  document.getElementById('mc-avg-sub').textContent='Raw & Booked: '+fmt(rbActual)+' actual · monthly uncertainty cone';
+ document.getElementById('mc-avg').textContent = fmt(rbLower) + ' – ' + fmt(rbUpper);
+document.getElementById('mc-avg').className = 'mc-value coral';
+document.getElementById('mc-avg').style.color = MODEL_META.rbVar.color;
+document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong>';
 
   const floorEl=document.getElementById('mc-floor');
   floorEl.textContent=fmt(CURRENT_LINES[floorKey].total);
