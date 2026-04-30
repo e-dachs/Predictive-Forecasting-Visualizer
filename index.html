@@ -230,7 +230,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 
   <div class="tab-panel" id="panel-1">
     <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">
-      Shaded cone = &#177;15% uncertainty band around the <span style="color:#FA5C5C;font-weight:800;">Raw &amp; Booked</span> model &mdash; pinched at Mar, fans to full width by Dec
+      Shaded cone = &plusmn;15% uncertainty band around the <span style="color:#FA5C5C;font-weight:800;">Raw &amp; Booked</span> model &mdash; pinched at Mar, fans to full width by Dec
     </p>
     <div id="legend-alllines" class="legend-wrap"></div>
     <div class="chart-wrap"><canvas id="chart-alllines"></canvas></div>
@@ -392,81 +392,62 @@ const SERIES_CONFIG = [
 
 let chartAllLines;
 
-// ── CONFIDENCE CONE — always on, centered on rbVar (Raw & Booked), equidistant above & below
-// Month 0-2 (Jan–Mar) = locked, cone width = 0. Fans linearly to MAX_HALF_PCT by Dec.
-const CONE_LOCK = 2;        // March (0-indexed)
-const CONE_MAX  = 0.15;     // half-width at month 11 = ±15% of rbVar value
+// Cone centered on rbVar, equidistant above & below. Locked Jan-Mar, fans to ±15% by Dec.
+const CONE_LOCK = 2, CONE_MAX = 0.15;
+function coneHalf(i){ return i <= CONE_LOCK ? 0 : ((i-CONE_LOCK)/(11-CONE_LOCK))*CONE_MAX; }
 
-function coneHalf(i) {
-  if (i <= CONE_LOCK) return 0;
-  return ((i - CONE_LOCK) / (11 - CONE_LOCK)) * CONE_MAX;
-}
-
-function buildConeDatasets() {
-  const center = CURRENT_LINES.rbVar.months;        // ← centered on red rbVar line
-  const upper  = center.map((v, i) => v * (1 + coneHalf(i)));
-  const lower  = center.map((v, i) => v * (1 - coneHalf(i)));
+function buildConeDatasets(){
+  const c = CURRENT_LINES.rbVar.months;
+  const upper = c.map((v,i) => v*(1+coneHalf(i)));
+  const lower = c.map((v,i) => v*(1-coneHalf(i)));
   return [
-    // Fill band between upper and lower
-    { label:'_cone_upper', data:upper, borderColor:'transparent', borderWidth:0,
-      pointRadius:0, tension:0.35, fill:'+1',
-      backgroundColor:'rgba(250,92,92,0.10)', order:20 },
-    { label:'_cone_lower', data:lower, borderColor:'transparent', borderWidth:0,
-      pointRadius:0, tension:0.35, fill:false, order:20 },
-    // Dashed edge lines
-    { label:'_cone_edge_hi', data:upper, borderColor:'rgba(250,92,92,0.40)',
-      borderWidth:1, borderDash:[4,5], pointRadius:0, tension:0.35, fill:false, order:19 },
-    { label:'_cone_edge_lo', data:lower, borderColor:'rgba(250,92,92,0.40)',
-      borderWidth:1, borderDash:[4,5], pointRadius:0, tension:0.35, fill:false, order:19 },
+    {label:'_cone_upper',data:upper,borderColor:'transparent',borderWidth:0,pointRadius:0,tension:0.35,fill:'+1',backgroundColor:'rgba(250,92,92,0.10)',order:20},
+    {label:'_cone_lower',data:lower,borderColor:'transparent',borderWidth:0,pointRadius:0,tension:0.35,fill:false,order:20},
+    {label:'_cone_edge_hi',data:upper,borderColor:'rgba(250,92,92,0.40)',borderWidth:1,borderDash:[4,5],pointRadius:0,tension:0.35,fill:false,order:19},
+    {label:'_cone_edge_lo',data:lower,borderColor:'rgba(250,92,92,0.40)',borderWidth:1,borderDash:[4,5],pointRadius:0,tension:0.35,fill:false,order:19},
   ];
 }
 
 function initAllLines(){
   const ctx = document.getElementById('chart-alllines').getContext('2d');
-
-  const lineDs = SERIES_CONFIG.map(s => ({
+  const lineDs = SERIES_CONFIG.map(s=>({
     label:s.label, data:CURRENT_LINES[s.key].months,
     borderColor:s.color, borderWidth:s.width, borderDash:s.dash,
     pointRadius:3, pointHoverRadius:5, pointBackgroundColor:s.color,
     tension:0.3, fill:false, order:1,
   }));
-
   chartAllLines = new Chart(ctx, {
     type:'line',
-    data:{ labels:MONTHS, datasets:[...buildConeDatasets(), ...lineDs] },
-    options:deepMerge(CHART_COMMON, {
-      interaction:{mode:'index', intersect:false},
+    data:{labels:MONTHS, datasets:[...buildConeDatasets(), ...lineDs]},
+    options:deepMerge(CHART_COMMON,{
+      interaction:{mode:'index',intersect:false},
       plugins:{tooltip:{callbacks:{
         label: item => {
-          if (item.dataset.label.startsWith('_cone')) return null;
-          const sc = SERIES_CONFIG.find(s => s.label === item.dataset.label);
-          if (!sc) return null;
-          return \` \${item.dataset.label}: \${fmtK(item.raw)}  (\${fmt(CURRENT_LINES[sc.key].total)} annual)\`;
+          if(item.dataset.label.startsWith('_cone')) return null;
+          const sc = SERIES_CONFIG.find(s=>s.label===item.dataset.label);
+          if(!sc) return null;
+          return ' '+item.dataset.label+': '+fmtK(item.raw)+'  ('+fmt(CURRENT_LINES[sc.key].total)+' annual)';
         },
         afterBody: items => {
-          const i = items[0].dataIndex;
-          const h = coneHalf(i);
-          if (h === 0) return ['  ── Cone: locked month'];
-          const v = CURRENT_LINES.rbVar.months[i];
-          const pct = (h * 100).toFixed(0);
+          const i=items[0].dataIndex, h=coneHalf(i);
+          if(h===0) return ['  ── Cone: locked month'];
+          const v=CURRENT_LINES.rbVar.months[i], pct=(h*100).toFixed(0);
           return [
-            \`  ── Uncertainty cone (±\${pct}% of Raw & Booked) ──\`,
-            \`  Upper bound: \${fmtK(v * (1 + h))}\`,
-            \`  Lower bound: \${fmtK(v * (1 - h))}\`,
-            \`  Range: \${fmtK(v * h * 2)}\`,
+            '  ── Uncertainty cone (±'+pct+'% of Raw & Booked) ──',
+            '  Upper bound: '+fmtK(v*(1+h)),
+            '  Lower bound: '+fmtK(v*(1-h)),
+            '  Range: '+fmtK(v*h*2),
           ];
         }
       }}}
     })
   });
-
   buildLegend();
-
-  // Hide defaultHidden series after legend is built (legend needs chart refs to exist first)
-  SERIES_CONFIG.forEach(s => {
-    if (!s.defaultHidden) return;
-    const idx = chartAllLines.data.datasets.findIndex(d => d.label === s.label);
-    if (idx >= 0) chartAllLines.getDatasetMeta(idx).hidden = true;
+  // Apply defaultHidden after chart + legend are ready
+  SERIES_CONFIG.forEach(s=>{
+    if(!s.defaultHidden) return;
+    const idx=chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
+    if(idx>=0) chartAllLines.getDatasetMeta(idx).hidden=true;
   });
   chartAllLines.update();
 }
@@ -504,7 +485,7 @@ function buildLegend(){
       const action = document.createElement('span');
       action.className = 'legend-action';
       action.textContent = s.defaultHidden ? 'show' : 'hide';
-      if (s.defaultHidden) item.classList.add('hidden');
+      if(s.defaultHidden) item.classList.add('hidden');
       item.appendChild(dot); item.appendChild(txt); item.appendChild(action);
       item.addEventListener('click', ()=>{
         const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
