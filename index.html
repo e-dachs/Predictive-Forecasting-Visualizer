@@ -460,15 +460,15 @@ function initAllLines(){
     })
   });
 
-  // Hide defaultHidden series immediately after chart creation
+  buildLegend();
+
+  // Hide defaultHidden series after legend is built (legend needs chart refs to exist first)
   SERIES_CONFIG.forEach(s => {
     if (!s.defaultHidden) return;
     const idx = chartAllLines.data.datasets.findIndex(d => d.label === s.label);
     if (idx >= 0) chartAllLines.getDatasetMeta(idx).hidden = true;
   });
-  chartAllLines.update('none');
-
-  buildLegend();
+  chartAllLines.update();
 }
 
 function buildLegend(){
