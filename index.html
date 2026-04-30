@@ -328,6 +328,7 @@ const YOY = {
 };
 
 const fmt  = v => '$'+(v/1e6).toFixed(2)+'M';
+const fmt1 = v => '$'+(v/1e6).toFixed(1)+'M';
 const fmtK = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : '$'+Math.round(v/1e3)+'K';
 
 const CHART_COMMON = {
