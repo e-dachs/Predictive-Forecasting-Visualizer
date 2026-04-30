@@ -653,7 +653,7 @@ function updateHeader(){
 document.getElementById('mc-avg').textContent = fmt1(rbLower) + ' – ' + fmt1(rbUpper);
 document.getElementById('mc-avg').className = 'mc-value coral';
 document.getElementById('mc-avg').style.color = MODEL_META.rbVar.color;
-document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong>';
+document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong> · ±7% range';
 
   const floorEl=document.getElementById('mc-floor');
   floorEl.textContent=fmt(CURRENT_LINES[floorKey].total);
