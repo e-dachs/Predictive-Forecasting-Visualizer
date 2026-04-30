@@ -148,6 +148,47 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .yoy-bar-track{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:10px;overflow:hidden;}
 .yoy-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
 
+/* ── CONFIDENCE BAND ── */
+.band-controls{
+  padding:14px 28px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.band-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+.band-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);
+  padding:7px 14px;border-radius:8px;cursor:pointer;
+  font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;
+  color:var(--text3);transition:all 0.2s;user-select:none;
+}
+.band-btn:hover{border-color:rgba(250,92,92,0.4);color:var(--coral);}
+.band-btn.active{
+  background:rgba(250,92,92,0.12);border-color:rgba(250,92,92,0.55);
+  color:var(--coral);box-shadow:0 2px 10px rgba(250,92,92,0.12);
+}
+.band-btn-icon{
+  width:22px;height:12px;border-radius:3px;position:relative;flex-shrink:0;
+  background:linear-gradient(to right,rgba(250,92,92,0.1),rgba(250,92,92,0.35));
+  border:1px solid rgba(250,92,92,0.45);
+}
+.band-btn-icon::after{
+  content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  height:1.5px;background:rgba(250,92,92,0.85);border-radius:1px;
+}
+.band-desc{font-size:11px;color:var(--text3);font-weight:500;}
+.band-info{
+  margin:10px 28px 0;padding:10px 14px;border-radius:8px;
+  background:rgba(250,92,92,0.07);border:1px solid rgba(250,92,92,0.22);
+  font-size:11px;color:var(--text2);font-weight:500;line-height:1.7;
+  display:none;
+}
+.band-info.visible{display:block;}
+.band-info strong{color:var(--coral);}
+.band-info .bi-row{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.band-info .bi-pill{
+  display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;
+  letter-spacing:0.3px;
+}
+
 /* ── MISC ── */
 .status-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;font-size:12px;color:var(--text3);}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
@@ -229,6 +270,26 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   </div>
 
   <div class="tab-panel" id="panel-1">
+    <div class="band-controls">
+      <span class="band-label">Confidence Band</span>
+      <button class="band-btn" id="band-btn" onclick="toggleBand()">
+        <span class="band-btn-icon"></span>
+        <span id="band-btn-txt">Show Uncertainty Cone</span>
+      </button>
+      <span class="band-desc">&#8212; Hurricane-tracker swath around the Combined model &middot; narrows near present, widens to &#177;15% by Dec</span>
+    </div>
+    <div class="band-info" id="band-info">
+      <div class="bi-row">
+        <strong>Uncertainty cone active</strong> &mdash;
+        <span class="bi-pill" style="background:rgba(255,255,255,0.08);color:#fff;">Center</span> Combined Variances Model &nbsp;&middot;&nbsp;
+        <span class="bi-pill" style="background:rgba(148,132,255,0.15);color:#9484FF;">Floor</span> Official Forecast Variances (conservative) &nbsp;&middot;&nbsp;
+        <span class="bi-pill" style="background:rgba(250,92,92,0.15);color:#FA5C5C;">Ceiling</span> Raw &amp; Booked Variances (optimistic)
+      </div>
+      <div style="margin-top:5px;color:var(--text3);">
+        Band width = 0% at current month (Mar), scales linearly to ~&#177;15% by December &mdash; reflects growing forecast uncertainty over time.
+        <strong>Shaded area = practical range for Marcus to plan against.</strong>
+      </div>
+    </div>
     <div id="legend-alllines" class="legend-wrap"></div>
     <div class="chart-wrap"><canvas id="chart-alllines"></canvas></div>
   </div>
@@ -388,14 +449,177 @@ const SERIES_CONFIG = [
 ];
 
 let chartAllLines;
+let bandVisible = false;
+
+// ── CONFIDENCE BAND LOGIC
+// Current month index (Mar = 2). Months 0..LOCK_MONTH are "locked" — near-zero spread.
+// Uncertainty grows linearly from 0% at LOCK_MONTH to MAX_SPREAD_PCT at month 11.
+const LOCK_MONTH    = 2;   // March (0-indexed) — last month with near-certain data
+const MAX_SPREAD    = 0.15; // ±15% at the end of the year
+
+function bandUncertainty(monthIdx) {
+  if (monthIdx <= LOCK_MONTH) return 0;
+  return ((monthIdx - LOCK_MONTH) / (11 - LOCK_MONTH)) * MAX_SPREAD;
+}
+
+// Build the three band datasets: upper fill area, lower fill area, and center reference.
+// Uses Chart.js fill: '+1' / '-1' trick:
+//   dataset order: [upperBound, center(fill between), lowerBound]
+// upperBound fills DOWN to lowerBound using fill: {target: '+2', ...}
+function buildBandDatasets() {
+  const center = CURRENT_LINES.avgVar.months;
+  // Upper bound: use rbVar (optimistic) blended with uncertainty taper
+  // Lower bound: use forecastVar (conservative) blended with uncertainty taper
+  // At locked months they converge to center; further out they fan to actual model extremes.
+  const upper = center.map((v, i) => {
+    const u = bandUncertainty(i);
+    const rbVal = CURRENT_LINES.rbVar.months[i];
+    // Blend between center and rbVar, scaled by uncertainty
+    return v + (rbVal - v) * u / MAX_SPREAD;
+  });
+  const lower = center.map((v, i) => {
+    const u = bandUncertainty(i);
+    const fvVal = CURRENT_LINES.forecastVar.months[i];
+    return v - (v - fvVal) * u / MAX_SPREAD;
+  });
+
+  return [
+    // 0: upper bound — fills down to dataset at offset +2 (lowerBound)
+    {
+      label: '_band_upper',
+      data: upper,
+      borderColor: 'rgba(250,92,92,0.0)',
+      borderWidth: 0,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: { target: '+1', above: 'rgba(250,92,92,0.10)', below: 'rgba(250,92,92,0.10)' },
+      order: 10,
+    },
+    // 1: lower bound — no fill, just bounds the bottom
+    {
+      label: '_band_lower',
+      data: lower,
+      borderColor: 'rgba(148,132,255,0.0)',
+      borderWidth: 0,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+      order: 10,
+    },
+    // 2: upper edge line (faint dashed)
+    {
+      label: '_band_edge_upper',
+      data: upper,
+      borderColor: 'rgba(250,92,92,0.35)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+      order: 9,
+    },
+    // 3: lower edge line (faint dashed)
+    {
+      label: '_band_edge_lower',
+      data: lower,
+      borderColor: 'rgba(148,132,255,0.35)',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+      order: 9,
+    },
+  ];
+}
+
+function rebuildAllLinesDatasets() {
+  if (!chartAllLines) return;
+  const baseDatasets = SERIES_CONFIG.map(s => ({
+    label: s.label,
+    data: CURRENT_LINES[s.key].months,
+    borderColor: s.color,
+    borderWidth: s.width,
+    borderDash: s.dash,
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointBackgroundColor: s.color,
+    tension: 0.3,
+    fill: false,
+    order: 1,
+  }));
+
+  if (bandVisible) {
+    chartAllLines.data.datasets = [...buildBandDatasets(), ...baseDatasets];
+  } else {
+    chartAllLines.data.datasets = baseDatasets;
+  }
+  chartAllLines.update();
+}
+
+function toggleBand() {
+  bandVisible = !bandVisible;
+  const btn  = document.getElementById('band-btn');
+  const txt  = document.getElementById('band-btn-txt');
+  const info = document.getElementById('band-info');
+  btn.classList.toggle('active', bandVisible);
+  txt.textContent = bandVisible ? 'Hide Uncertainty Cone' : 'Show Uncertainty Cone';
+  info.classList.toggle('visible', bandVisible);
+  rebuildAllLinesDatasets();
+}
+
 function initAllLines(){
   const ctx = document.getElementById('chart-alllines').getContext('2d');
+  const baseDatasets = SERIES_CONFIG.map(s => ({
+    label: s.label,
+    data: CURRENT_LINES[s.key].months,
+    borderColor: s.color,
+    borderWidth: s.width,
+    borderDash: s.dash || [],
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointBackgroundColor: s.color,
+    tension: 0.3,
+    fill: false,
+    order: 1,
+  }));
+
   chartAllLines = new Chart(ctx, {
-    type:'line',
-    data:{labels:MONTHS,datasets:SERIES_CONFIG.map(s=>({label:s.label,data:CURRENT_LINES[s.key].months,borderColor:s.color,borderWidth:s.width,borderDash:s.dash,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:s.color,tension:0.3,fill:false}))},
-    options:deepMerge(CHART_COMMON,{
-      interaction:{mode:'index',intersect:false},
-      plugins:{tooltip:{callbacks:{label:item=>{const total=CURRENT_LINES[SERIES_CONFIG[item.datasetIndex].key].total;return ` ${item.dataset.label}: ${fmtK(item.raw)}  (${fmt(total)} annual)`;}}}}
+    type: 'line',
+    data: { labels: MONTHS, datasets: baseDatasets },
+    options: deepMerge(CHART_COMMON, {
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: item => {
+              if (item.dataset.label.startsWith('_band')) return null;
+              // Find matching SERIES_CONFIG entry by label
+              const sc = SERIES_CONFIG.find(s => s.label === item.dataset.label);
+              if (!sc) return null;
+              const total = CURRENT_LINES[sc.key].total;
+              return ` ${item.dataset.label}: ${fmtK(item.raw)}  (${fmt(total)} annual)`;
+            },
+            // Inject band range into tooltip when band is on
+            afterBody: items => {
+              if (!bandVisible) return [];
+              const i = items[0].dataIndex;
+              const u = bandUncertainty(i);
+              if (u === 0) return ['  Band: locked (current month)'];
+              const center = CURRENT_LINES.avgVar.months[i];
+              const upper  = center + (CURRENT_LINES.rbVar.months[i] - center) * u / MAX_SPREAD;
+              const lower  = center - (center - CURRENT_LINES.forecastVar.months[i]) * u / MAX_SPREAD;
+              const pct    = (u * 100).toFixed(0);
+              return [
+                `  ── Uncertainty Cone (±${pct}%) ──`,
+                `  Ceiling: ${fmtK(upper)}`,
+                `  Floor:   ${fmtK(lower)}`,
+                `  Spread:  ${fmtK(upper - lower)}`,
+              ];
+            }
+          }
+        }
+      }
     })
   });
   buildLegend();
@@ -425,8 +649,8 @@ function buildLegend(){
       const item = document.createElement('div');
       item.className = 'legend-item';
       const dot = document.createElement('div');
-      dot.className = s.dash.length ? 'legend-dot dashed' : 'legend-dot';
-      if(s.dash.length){dot.style.borderBottomColor=s.color;dot.style.height='0';}
+      dot.className = s.dash && s.dash.length ? 'legend-dot dashed' : 'legend-dot';
+      if(s.dash && s.dash.length){dot.style.borderBottomColor=s.color;dot.style.height='0';}
       else dot.style.background=s.color;
       const txt = document.createElement('span');
       txt.className = 'legend-text';
@@ -437,6 +661,7 @@ function buildLegend(){
       item.appendChild(dot); item.appendChild(txt); item.appendChild(action);
       item.addEventListener('click', ()=>{
         const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
+        if(idx<0) return;
         const meta = chartAllLines.getDatasetMeta(idx);
         meta.hidden = !meta.hidden;
         item.classList.toggle('hidden');
@@ -664,13 +889,16 @@ async function liveRefresh(){
 
 function rebuildAllCharts(){
   const was={...chartsInited};
+  const wasBand=bandVisible;
   [chartTrend,chartAllLines,chartAnim,chartYoY].forEach(c=>{try{if(c)c.destroy();}catch(e){}});
   chartTrend=chartAllLines=chartAnim=chartYoY=null;
   chartsInited={0:false,1:false,2:false,3:false};
+  bandVisible=false;
   animFrame=ANIM_DATA.length-1;animPlaying=false;
   const active=parseInt(document.querySelector('.tab-btn.active').dataset.tab);
   initTab(active);
   [0,1,2,3].forEach(t=>{if(t!==active&&was[t])initTab(t);});
+  if(wasBand&&chartAllLines){bandVisible=false;toggleBand();}
 }
 
 // ── INIT — blank cards until live data arrives, then fetch
