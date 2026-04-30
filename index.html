@@ -650,7 +650,8 @@ function updateHeader(){
   document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.filter(w=>w.label!=='Current').length;
   document.getElementById('hdr-week').textContent=latest.label;
   document.getElementById('mc-week').textContent=latest.label;
-document.getElementById('mc-avg').textContent = fmt1(rbLower) + ' – ' + fmt1(rbUpper);
+document.getElementById('mc-avg').textContent =
+  '$' + (rbLower / 1e6).toFixed(1) + ' – ' + '$' + (rbUpper / 1e6).toFixed(1) + 'M';
 document.getElementById('mc-avg').className = 'mc-value coral';
 document.getElementById('mc-avg').style.color = MODEL_META.rbVar.color;
 document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong> · ±7% range';
