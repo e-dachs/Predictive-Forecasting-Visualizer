@@ -194,8 +194,8 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   </div>
   <div class="metric-card hero">
     <div class="mc-label">Current Yearly Prediction</div>
-    <div class="mc-value green" id="mc-avg">$29.34M</div>
-    <div class="mc-sub">combined variances model</div>
+    <div class="mc-value green" id="mc-avg" style="font-size:24px;">$29.34M - $31.68M</div>
+    <div class="mc-sub" id="mc-avg-sub">Raw &amp; Booked: $30.55M &middot; monthly uncertainty cone</div>
   </div>
   <div class="metric-card">
     <div class="mc-label">Conservative Floor</div>
@@ -631,8 +631,10 @@ function buildYoYCards(){
 function updateHeader(){
   const datedWeeks=WEEKLY_TREND.filter(w=>w.label!=='Current');
   const latest=datedWeeks[datedWeeks.length-1];
-  const pred=CURRENT_LINES.avgVar.total;
-  const ontrack=pred>=TARGET;
+  const rbActual=CURRENT_LINES.rbVar.total;
+  const rbLower=CURRENT_LINES.rbVar.months.reduce((sum,v,i)=>sum+(v*(1-coneHalf(i))),0);
+  const rbUpper=CURRENT_LINES.rbVar.months.reduce((sum,v,i)=>sum+(v*(1+coneHalf(i))),0);
+  const ontrack=rbActual>=TARGET;
 
   // Find actual lowest & highest prediction model dynamically
   const predKeys=Object.keys(MODEL_META);
@@ -645,8 +647,9 @@ function updateHeader(){
   document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.filter(w=>w.label!=='Current').length;
   document.getElementById('hdr-week').textContent=latest.label;
   document.getElementById('mc-week').textContent=latest.label;
-  document.getElementById('mc-avg').textContent=fmt(pred);
+  document.getElementById('mc-avg').textContent=fmt(rbLower)+' - '+fmt(rbUpper);
   document.getElementById('mc-avg').className='mc-value '+(ontrack?'green':'coral');
+  document.getElementById('mc-avg-sub').textContent='Raw & Booked: '+fmt(rbActual)+' actual · monthly uncertainty cone';
 
   const floorEl=document.getElementById('mc-floor');
   floorEl.textContent=fmt(CURRENT_LINES[floorKey].total);
@@ -768,6 +771,7 @@ document.getElementById('hdr-weeks').textContent='—';
 document.getElementById('hdr-week').textContent='—';
 document.getElementById('mc-week').textContent='—';
 document.getElementById('mc-avg').textContent='—';
+document.getElementById('mc-avg-sub').textContent='loading...';
 document.getElementById('mc-floor').textContent='—';
 document.getElementById('mc-floor-sub').textContent='loading…';
 document.getElementById('mc-ceiling').textContent='—';
