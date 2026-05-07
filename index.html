@@ -92,6 +92,30 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .chart-wrap.short{height:320px;}
 .section-title{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 28px;margin-bottom:14px;}
 
+/* ── SNAPSHOT TOGGLE (Tab 2) ── */
+.snapshot-bar{
+  display:flex;align-items:center;gap:12px;
+  padding:0 28px 16px;flex-wrap:wrap;
+}
+.snapshot-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}
+.snapshot-pills{display:flex;gap:4px;flex-shrink:0;}
+.snapshot-pill{
+  background:var(--card);border:1px solid var(--border);color:var(--text3);
+  padding:7px 15px;border-radius:8px;font-family:'Raleway',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.snapshot-pill:hover:not(.disabled){background:var(--card2);border-color:rgba(255,255,255,0.2);color:var(--text2);}
+.snapshot-pill.active-current{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.45);color:#22c55e;}
+.snapshot-pill.active-pre{background:rgba(148,132,255,0.12);border-color:rgba(148,132,255,0.45);color:var(--violet);}
+.snapshot-pill.disabled{opacity:0.3;cursor:not-allowed;}
+.snap-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.snap-dot.green{background:#22c55e;}
+.snap-dot.violet{background:var(--violet);}
+.snapshot-divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.snapshot-ctx{font-size:11px;color:var(--text3);font-weight:500;}
+.pre-badge{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;background:rgba(148,132,255,0.25);color:var(--violet);letter-spacing:0.5px;}
+
 /* ── CUSTOM LEGEND ── */
 .legend-wrap{padding:12px 28px 0;display:flex;flex-direction:column;gap:0;}
 .legend-click-hint{
@@ -231,6 +255,23 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
   </div>
 
   <div class="tab-panel" id="panel-1">
+
+    <!-- ── SNAPSHOT TOGGLE ── -->
+    <div class="snapshot-bar">
+      <span class="snapshot-label">Snapshot</span>
+      <div class="snapshot-pills">
+        <button class="snapshot-pill active-current" id="pill-current" onclick="switchAllLinesSource('current')">
+          <span class="snap-dot green"></span>Current
+        </button>
+        <button class="snapshot-pill disabled" id="pill-pre" onclick="switchAllLinesSource('pre')">
+          <span class="snap-dot violet"></span>Current-Pre
+          <span class="pre-badge">PRE</span>
+        </button>
+      </div>
+      <div class="snapshot-divider"></div>
+      <span class="snapshot-ctx" id="snapshot-ctx">Showing post-forecast numbers — Current tab</span>
+    </div>
+
     <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">
       Shaded cone = &plusmn;7% confidence band around the <span style="color:#FA5C5C;font-weight:800;">Raw &amp; Booked</span> model
     </p>
@@ -320,6 +361,13 @@ let CURRENT_LINES = {
   bookedProj:  {label:'Booked Revenue',      total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
 };
 
+// ── PRE LINES — populated from Current-Pre tab. null = not fetched / not available.
+let PRE_LINES = null;
+// Which snapshot Tab 2 is showing: 'current' | 'pre'
+let allLinesSource = 'current';
+// Persistent legend visibility for Tab 2 (survives source switches)
+const allLinesHidden = {};
+
 const YOY = {
   2022:{total:36233501,months:[2867848,2835145,3001165,3105798,3101214,3064058,3040763,3103533,3035876,2996567,3004257,3077276],color:'#7fc7ed'},
   2023:{total:37632680,months:[3132228,3141582,3001842,2772312,3049256,3073742,3106358,3147065,3259491,3303432,3305493,3339879],color:'#9484FF'},
@@ -398,8 +446,12 @@ let chartAllLines;
 
 const CONE_LOCK = new Date().getMonth(), CONE_MAX = 0.07;
 function coneHalf(i){return i<=CONE_LOCK?0:((i-CONE_LOCK)/(11-CONE_LOCK))*CONE_MAX;}
+
+// Returns whichever dataset the toggle is pointed at
+function getActiveLines(){ return (allLinesSource==='pre' && PRE_LINES) ? PRE_LINES : CURRENT_LINES; }
+
 function buildConeDatasets(){
-  const c=CURRENT_LINES.rbVar.months;
+  const c=getActiveLines().rbVar.months;
   const upper=c.map((v,i)=>v*(1+coneHalf(i)));
   const lower=c.map((v,i)=>v*(1-coneHalf(i)));
   return [
@@ -411,8 +463,12 @@ function buildConeDatasets(){
 }
 
 function initAllLines(){
+  // Seed hidden state from defaultHidden on first call only
+  SERIES_CONFIG.forEach(s=>{ if(!(s.key in allLinesHidden)) allLinesHidden[s.key]=!!s.defaultHidden; });
+
   const ctx=document.getElementById('chart-alllines').getContext('2d');
-  const lineDs=SERIES_CONFIG.map(s=>({label:s.label,data:CURRENT_LINES[s.key].months,borderColor:s.color,borderWidth:s.width,borderDash:s.dash,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:s.color,tension:0.3,fill:false,order:1}));
+  const lines=getActiveLines();
+  const lineDs=SERIES_CONFIG.map(s=>({label:s.label,data:lines[s.key].months,borderColor:s.color,borderWidth:s.width,borderDash:s.dash,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:s.color,tension:0.3,fill:false,order:1}));
   chartAllLines=new Chart(ctx,{
     type:'line',
     data:{labels:MONTHS,datasets:[...buildConeDatasets(),...lineDs]},
@@ -423,12 +479,12 @@ function initAllLines(){
           if(item.dataset.label.startsWith('_cone'))return null;
           const sc=SERIES_CONFIG.find(s=>s.label===item.dataset.label);
           if(!sc)return null;
-          return ' '+item.dataset.label+': '+fmtK(item.raw)+'  ('+fmt(CURRENT_LINES[sc.key].total)+' annual)';
+          return ' '+item.dataset.label+': '+fmtK(item.raw)+'  ('+fmt(getActiveLines()[sc.key].total)+' annual)';
         },
         afterBody:items=>{
           const i=items[0].dataIndex,h=coneHalf(i);
           if(h===0)return ['  -- Cone: locked month'];
-          const v=CURRENT_LINES.rbVar.months[i],pct=(h*100).toFixed(0);
+          const v=getActiveLines().rbVar.months[i],pct=(h*100).toFixed(0);
           return ['  -- Confidence band (+-'+pct+'% of Raw & Booked)','  Upper: '+fmtK(v*(1+h)),'  Lower: '+fmtK(v*(1-h)),'  Range: '+fmtK(v*h*2)];
         }
       }}}
@@ -436,11 +492,63 @@ function initAllLines(){
   });
   buildLegend();
   SERIES_CONFIG.forEach(s=>{
-    if(!s.defaultHidden)return;
+    if(!allLinesHidden[s.key])return;
     const idx=chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
     if(idx>=0)chartAllLines.getDatasetMeta(idx).hidden=true;
   });
   chartAllLines.update();
+}
+
+// Switch Tab 2 between Current and Current-Pre data
+function switchAllLinesSource(source){
+  if(source==='pre'&&!PRE_LINES)return; // guard — no data yet
+  allLinesSource=source;
+
+  // Update pill appearance
+  const pillC=document.getElementById('pill-current');
+  const pillP=document.getElementById('pill-pre');
+  pillC.className='snapshot-pill'+(source==='current'?' active-current':'');
+  pillP.className='snapshot-pill'+(source==='pre'?' active-pre':'')+(PRE_LINES?'':' disabled');
+
+  // Update context text
+  const ctxEl=document.getElementById('snapshot-ctx');
+  if(source==='pre'){
+    ctxEl.textContent='Showing pre-forecast snapshot — before Marcus updates (Current-Pre tab)';
+    ctxEl.style.color='var(--violet)';
+  } else {
+    ctxEl.textContent='Showing post-forecast numbers — Current tab';
+    ctxEl.style.color='';
+  }
+
+  // Swap chart data in-place (no destroy needed)
+  if(chartAllLines){
+    const lines=getActiveLines();
+    chartAllLines.data.datasets=[...buildConeDatasets(),...SERIES_CONFIG.map(s=>({
+      label:s.label,data:lines[s.key].months,borderColor:s.color,borderWidth:s.width,
+      borderDash:s.dash,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:s.color,
+      tension:0.3,fill:false,order:1
+    }))];
+    // Re-apply hidden state after dataset replace
+    SERIES_CONFIG.forEach(s=>{
+      const idx=chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
+      if(idx>=0)chartAllLines.getDatasetMeta(idx).hidden=!!allLinesHidden[s.key];
+    });
+    chartAllLines.update();
+  }
+}
+
+// Enable/disable Pre pill based on whether PRE_LINES was fetched
+function updateSnapshotToggleUI(){
+  const pillP=document.getElementById('pill-pre');
+  if(PRE_LINES){
+    pillP.classList.remove('disabled');
+    pillP.title='';
+  } else {
+    pillP.classList.add('disabled');
+    pillP.title='Current-Pre tab not found in the sheet';
+    // If somehow we were on Pre and it vanished, revert
+    if(allLinesSource==='pre') switchAllLinesSource('current');
+  }
 }
 
 function buildLegend(){
@@ -465,7 +573,7 @@ function buildLegend(){
     div.appendChild(lbl);
     SERIES_CONFIG.filter(s=>s.group===grp).forEach(s=>{
       const item = document.createElement('div');
-      item.className = 'legend-item';
+      item.className = 'legend-item'+(allLinesHidden[s.key]?' hidden':'');
       const dot = document.createElement('div');
       dot.className = s.dash.length ? 'legend-dot dashed' : 'legend-dot';
       if(s.dash.length){dot.style.borderBottomColor=s.color;dot.style.height='0';}
@@ -475,13 +583,13 @@ function buildLegend(){
       txt.textContent = s.label;
       const action = document.createElement('span');
       action.className = 'legend-action';
-      action.textContent = s.defaultHidden ? 'show' : 'hide';
-      if(s.defaultHidden) item.classList.add('hidden');
+      action.textContent = allLinesHidden[s.key] ? 'show' : 'hide';
       item.appendChild(dot); item.appendChild(txt); item.appendChild(action);
       item.addEventListener('click', ()=>{
         const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
         const meta = chartAllLines.getDatasetMeta(idx);
         meta.hidden = !meta.hidden;
+        allLinesHidden[s.key] = !!meta.hidden; // persist across source switches
         item.classList.toggle('hidden');
         action.textContent = meta.hidden ? 'show' : 'hide';
         chartAllLines.update();
@@ -714,11 +822,10 @@ async function liveRefresh(){
       const animResults=await Promise.all(WEEKLY_TREND.map(async w=>{try{const rows=await fetchBySheetName(w.label,'A1:Z100');if(rows.length<10)return null;const prAt=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(rows[idx]?.[c])),total:parseMoney(rows[idx]?.[16])});const safe=(idx)=>idx>=0?prAt(idx):{months:Array(12).fill(0),total:0};const find=(fn)=>rows.findIndex(fn);const afv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('forecast variances')&&!c.includes('raw');});const arv=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('raw variances')&&!c.includes('booked');});const abk=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('booked variances')&&!c.includes('raw');});const aav=find(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});const arb=find(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});return{label:w.label,short:w.short,forecastVar:safe(afv),rawVar:safe(arv),bookedVar:safe(abk),avgVar:safe(aav),rbVar:safe(arb)};}catch(e){return null;}}));
       const fresh=animResults.filter(Boolean);if(fresh.length>0)ANIM_DATA=fresh;
 
-      // ── Fetch "Current" tab — always the latest in-progress week, appended to end
+      // ── Fetch "Current" tab
       try{
         const curRows=await fetchBySheetName('Current','A1:Z100');
         if(curRows.length>=10){
-          // Extract avgVar total for the trend line (same column layout as weekly tabs)
           const prAtCur=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(curRows[idx]?.[c])),total:parseMoney(curRows[idx]?.[16])});
           const safeCur=(idx)=>idx>=0?prAtCur(idx):{months:Array(12).fill(0),total:0};
           const findCur=(fn)=>curRows.findIndex(fn);
@@ -729,15 +836,8 @@ async function liveRefresh(){
           const carb=findCur(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});
           const curAvg=safeCur(caav);
           if(curAvg.total>0){
-            // Append to WEEKLY_TREND as "Current"
             WEEKLY_TREND.push({label:'Current',short:'Current',total:curAvg.total,months:curAvg.months});
-            // Append to ANIM_DATA
-            ANIM_DATA.push({
-              label:'Current',short:'Current',
-              forecastVar:safeCur(cafv),rawVar:safeCur(carv),
-              bookedVar:safeCur(cabk),avgVar:curAvg,rbVar:safeCur(carb)
-            });
-            // Also update CURRENT_LINES from this tab so cards/all-models reflect latest
+            ANIM_DATA.push({label:'Current',short:'Current',forecastVar:safeCur(cafv),rawVar:safeCur(carv),bookedVar:safeCur(cabk),avgVar:curAvg,rbVar:safeCur(carb)});
             const applyC=(key,idx)=>{if(idx<0)return;const d=prAtCur(idx);if(d.total>0)CURRENT_LINES[key]={...CURRENT_LINES[key],...d};};
             applyC('forecastVar',cafv);applyC('rawVar',carv);applyC('bookedVar',cabk);applyC('avgVar',caav);applyC('rbVar',carb);
             const srcCur=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return kw.every(k=>c.includes(k.toLowerCase()));});
@@ -747,9 +847,51 @@ async function liveRefresh(){
           }
         }
       }catch(e){console.warn('Current tab fetch failed:',e);}
-      updateHeader();rebuildAllCharts();
+
+      // ── Fetch "Current-Pre" tab (Thursday snapshot before Marcus updates)
+      try{
+        const preRows=await fetchBySheetName('Current-Pre','A1:Z100');
+        if(preRows.length>=10){
+          const prAtPre=(idx)=>({months:[4,5,6,7,8,9,10,11,12,13,14,15].map(c=>parseMoney(preRows[idx]?.[c])),total:parseMoney(preRows[idx]?.[16])});
+          const safePre=(idx)=>idx>=0?prAtPre(idx):{months:Array(12).fill(0),total:0};
+          const findPre=(fn)=>preRows.findIndex(fn);
+          const pafv=findPre(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('forecast variances')&&!c.includes('raw');});
+          const parv=findPre(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('raw variances')&&!c.includes('booked');});
+          const pabk=findPre(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('booked variances')&&!c.includes('raw');});
+          const paav=findPre(r=>{const c=String(r?.[3]||'').toLowerCase();return c.includes('predicted')&&c.includes('average variances');});
+          const parb=findPre(r=>{const c=String(r?.[3]||'').toLowerCase();if(!c.includes('predicted'))return false;return c.includes('raw+booked')||c.includes('raw & booked')||c.includes('raw and booked')||(c.includes('raw')&&c.includes('booked')&&!c.includes('average')&&!c.includes('raw variances'));});
+          const preAvg=safePre(paav);
+          if(preAvg.total>0){
+            PRE_LINES={
+              forecastVar:safePre(pafv),rawVar:safePre(parv),bookedVar:safePre(pabk),
+              avgVar:preAvg,rbVar:safePre(parb),
+              offFcst:{months:Array(12).fill(0),total:0},
+              rawFcst:{months:Array(12).fill(0),total:0},
+              bookedProj:{months:Array(12).fill(0),total:0},
+            };
+            // Also grab source lines if present
+            const srcPre=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return kw.every(k=>c.includes(k.toLowerCase()));});
+            const applyPre=(key,idx)=>{if(idx<0)return;const d=prAtPre(idx);if(d.total>0)PRE_LINES[key]=d;};
+            applyPre('offFcst',srcPre(preRows,'2026 forecast'));
+            applyPre('rawFcst',srcPre(preRows,'2026 raw forecast'));
+            applyPre('bookedProj',srcPre(preRows,'2026 booked revenue'));
+          } else {
+            PRE_LINES=null;
+          }
+        } else {
+          PRE_LINES=null;
+        }
+      }catch(e){
+        console.warn('Current-Pre tab fetch failed (tab may not exist yet):',e);
+        PRE_LINES=null;
+      }
+
+      updateHeader();
+      updateSnapshotToggleUI();
+      rebuildAllCharts();
       const now=new Date();document.getElementById('data-ts').textContent=`Live · ${now.toLocaleTimeString()}`;
-      document.getElementById('status-msg').innerHTML=`Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> (incl. Current) · latest closed: <strong style="color:var(--blue)">${latestLabel}</strong> · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      const preStatus=PRE_LINES?' · <span style="color:var(--violet);font-weight:700">Current-Pre ✓</span>':' · <span style="color:#555">Current-Pre: not found</span>';
+      document.getElementById('status-msg').innerHTML=`Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> (incl. Current) · latest closed: <strong style="color:var(--blue)">${latestLabel}</strong>${preStatus} · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   }catch(e){
