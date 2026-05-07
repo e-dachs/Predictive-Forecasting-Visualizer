@@ -33,11 +33,7 @@ header{
 @keyframes pulse-dot{0%,100%{transform:scale(1);box-shadow:0 0 8px rgba(34,197,94,0.6);}50%{transform:scale(1.3);box-shadow:0 0 16px rgba(34,197,94,0.9);}}
 .live-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--green);}
 h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
-.hdr-stats{display:flex;align-items:center;gap:24px;flex:1;justify-content:center;flex-wrap:wrap;}
-.hdr-stat{text-align:center;}
-.hdr-stat .num{font-size:22px;font-weight:800;color:var(--white);display:block;line-height:1.1;}
-.hdr-stat .lbl{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;}
-.hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto;}
 .refresh-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:8px;font-family:'Raleway',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
 .refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
 .refresh-btn.loading .spin{animation:spin 0.7s linear infinite;}
@@ -92,7 +88,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 .chart-wrap.short{height:320px;}
 .section-title{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 28px;margin-bottom:14px;}
 
-/* ── SNAPSHOT TOGGLE (Tab 2) ── */
+/* ── SNAPSHOT TOGGLE ── */
 .snapshot-bar{
   display:flex;align-items:center;gap:12px;
   padding:0 28px 16px;flex-wrap:wrap;
@@ -188,20 +184,6 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     </div>
     <h1>Predictive Forecasting Visualizer</h1>
   </div>
-  <div class="hdr-stats">
-    <div class="hdr-stat">
-      <span class="num" id="hdr-weeks">13</span>
-      <span class="lbl">weeks of 2026 tracked</span>
-    </div>
-    <div class="hdr-stat">
-      <span class="num" id="hdr-years">4</span>
-      <span class="lbl">years in model</span>
-    </div>
-    <div class="hdr-stat">
-      <span class="num" id="hdr-week">2026-3-26</span>
-      <span class="lbl">latest week</span>
-    </div>
-  </div>
   <div class="hdr-right">
     <span class="data-ts" id="data-ts">Embedded data</span>
     <button class="refresh-btn" onclick="liveRefresh()">
@@ -213,16 +195,14 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 <div class="cards-row">
   <div class="metric-card">
     <div class="mc-label">Most Recent Week</div>
-    <div class="mc-value blue" id="mc-week" style="font-size:20px;">2026-3-26</div>
-    <div class="mc-sub">latest data snapshot</div>
+    <div class="mc-value blue" id="mc-week" style="font-size:20px;">—</div>
+    <div class="mc-sub" id="mc-week-sub">latest "Current" snapshot</div>
   </div>
-<div class="metric-card hero" id="mc-prediction-card">
-  <div class="mc-label">Current Yearly Prediction</div>
-  <div class="mc-value coral" id="mc-avg">$—</div>
-  <div class="mc-sub" id="mc-avg-sub">
-    raw & booked model: <strong>$—</strong>
+  <div class="metric-card hero" id="mc-prediction-card">
+    <div class="mc-label">Current Yearly Prediction</div>
+    <div class="mc-value coral" id="mc-avg">$—</div>
+    <div class="mc-sub" id="mc-avg-sub">raw &amp; booked model: <strong>$—</strong></div>
   </div>
-</div>
   <div class="metric-card">
     <div class="mc-label">Conservative Floor</div>
     <div class="mc-value" id="mc-floor">$26.88M</div>
@@ -241,35 +221,29 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     Click a tab to explore different charts
   </div>
   <nav class="tabs-nav">
-    <button class="tab-btn active" data-tab="0"> Yearly Forecast by Week</button>
-    <button class="tab-btn" data-tab="1"> Current Monthly View — All Models</button>
-    <button class="tab-btn" data-tab="2"><span class="tab-icon">▶</span> Animation View — All Models</button>
+    <button class="tab-btn active" data-tab="0"> Current Monthly View — All Models</button>
+    <button class="tab-btn" data-tab="1"><span class="tab-icon">▶</span> Animation View — All Models</button>
+    <button class="tab-btn" data-tab="2"> Yearly Forecast by Week</button>
     <button class="tab-btn" data-tab="3"> Monthly Year Over Year</button>
   </nav>
 
+  <!-- TAB 0: Current Monthly View (was panel-1) -->
   <div class="tab-panel active" id="panel-0">
-    <p style="padding:0 28px 14px;font-size:12px;color:#888;font-weight:600;letter-spacing:0.3px;">
-      Predicted from Raw &amp; Booked Variances Model &mdash; annual revenue total tracked week by week &nbsp;&middot;&nbsp; Dashed line = $26M target
-    </p>
-    <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
-  </div>
-
-  <div class="tab-panel" id="panel-1">
 
     <!-- ── SNAPSHOT TOGGLE ── -->
     <div class="snapshot-bar">
       <span class="snapshot-label">Snapshot</span>
       <div class="snapshot-pills">
         <button class="snapshot-pill active-current" id="pill-current" onclick="switchAllLinesSource('current')">
-          <span class="snap-dot green"></span>Current
+          <span class="snap-dot green"></span><span id="pill-current-label">Current Official Run</span>
         </button>
         <button class="snapshot-pill disabled" id="pill-pre" onclick="switchAllLinesSource('pre')">
-          <span class="snap-dot violet"></span>Current-Pre
+          <span class="snap-dot violet"></span><span id="pill-pre-label">Pre-Run Data</span>
           <span class="pre-badge">PRE</span>
         </button>
       </div>
       <div class="snapshot-divider"></div>
-      <span class="snapshot-ctx" id="snapshot-ctx">Showing post-forecast numbers — Current tab</span>
+      <span class="snapshot-ctx" id="snapshot-ctx">Current official forecast run</span>
     </div>
 
     <p style="padding:0 28px 10px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;">
@@ -279,7 +253,8 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     <div class="chart-wrap"><canvas id="chart-alllines"></canvas></div>
   </div>
 
-  <div class="tab-panel" id="panel-2">
+  <!-- TAB 1: Animation View (was panel-2) -->
+  <div class="tab-panel" id="panel-1">
     <div class="anim-controls">
       <button class="play-btn" id="play-btn" onclick="togglePlay()">&#9658;</button>
       <div class="speed-group">
@@ -308,6 +283,15 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
     <div class="week-pills-wrap" id="week-pills"></div>
   </div>
 
+  <!-- TAB 2: Yearly Forecast by Week (was panel-0) -->
+  <div class="tab-panel" id="panel-2">
+    <p style="padding:0 28px 14px;font-size:12px;color:#888;font-weight:600;letter-spacing:0.3px;">
+      Predicted from Raw &amp; Booked Variances Model &mdash; annual revenue total tracked week by week &nbsp;&middot;&nbsp; Dashed line = $26M target
+    </p>
+    <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+  </div>
+
+  <!-- TAB 3: Year Over Year (was panel-3) -->
   <div class="tab-panel" id="panel-3">
     <p style="padding:0 28px 14px;font-size:11px;color:#888;font-weight:600;letter-spacing:0.2px;text-align:center;">👇 Click any year in the legend to show or hide that line</p>
     <div class="chart-wrap"><canvas id="chart-yoy"></canvas></div>
@@ -317,7 +301,7 @@ h1{font-size:18px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;}
 
 <div class="status-bar">
   <div class="status-dot ok" id="status-dot"></div>
-  <span id="status-msg">Data loaded · <a href="https://docs.google.com/spreadsheets/d/1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a></span>
+  <span id="status-msg">Live data loaded · <a href="https://docs.google.com/spreadsheets/d/1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a></span>
 </div>
 
 <script>
@@ -325,7 +309,6 @@ const SHEET_ID = '1qicfIj5pNIVJQKmSZNLGUzNbobMiu-SxJ1UIaJ4C_PY';
 const TARGET   = 26000000;
 const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// Color + name for each prediction model key — single source of truth
 const MODEL_META = {
   forecastVar: {color:'#9484FF', label:'Official Forecast Variances Model'},
   rawVar:      {color:'#73F2E5', label:'Raw Forecast Variances Model'},
@@ -333,6 +316,60 @@ const MODEL_META = {
   avgVar:      {color:'#FFFFFF', label:'Combined Variances Model'},
   rbVar:       {color:'#FA5C5C', label:'Raw & Booked Variances Model'},
 };
+
+// ── DATE HELPERS ─────────────────────────────────────────────────────────────
+// Format a Date as M/D/YY (e.g. 5/1/26)
+function fmtPillDate(d){
+  return (d.getMonth()+1)+'/'+d.getDate()+'/'+(String(d.getFullYear()).slice(-2));
+}
+
+// Parse a tab label like "2026-4-23" into a Date (local, midnight)
+function parseTabDate(label){
+  const parts=label.split('-');
+  if(parts.length<3)return null;
+  return new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+}
+
+// Given a Date, return the next Friday on or after it
+function nextFriday(d){
+  const day=d.getDay(); // 0=Sun … 6=Sat
+  const diff=(5-day+7)%7; // days until Friday; 0 means already Friday → stay
+  const fri=new Date(d);
+  fri.setDate(fri.getDate()+diff);
+  return fri;
+}
+
+// Compute the Current week date from WEEKLY_TREND (next Friday after latest dated tab)
+// Returns a Date object, or today as fallback
+function computeCurrentDate(){
+  const dated=WEEKLY_TREND.filter(w=>w.label!=='Current');
+  if(!dated.length) return new Date();
+  const latest=dated[dated.length-1];
+  const d=parseTabDate(latest.label);
+  if(!d) return new Date();
+  // next Friday strictly after the latest tab date (add 1 day first so we always get the NEXT Friday)
+  const dayAfter=new Date(d);
+  dayAfter.setDate(dayAfter.getDate()+1);
+  return nextFriday(dayAfter);
+}
+
+// Today's date formatted M/D/YY — used for Pre-Run pill (snapshot taken today)
+function todayPillDate(){
+  return fmtPillDate(new Date());
+}
+
+// Update snapshot pill labels and Most Recent Week card with computed dates
+function updateDateLabels(){
+  const currentDate=computeCurrentDate();
+  const currentStr=fmtPillDate(currentDate);
+  const preStr=todayPillDate();
+
+  document.getElementById('pill-current-label').textContent='Current Official Run '+currentStr;
+  document.getElementById('pill-pre-label').textContent='Pre-Run Data '+preStr;
+  document.getElementById('mc-week').textContent=currentStr;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 let WEEKLY_TREND = [
   {label:'2025-12-31',short:'12/31',total:29686138,months:[2294321,2306342,2259111,2233039,2256681,2253032,2437463,2500123,2530750,2643983,2864802,3106493]},
@@ -361,11 +398,8 @@ let CURRENT_LINES = {
   bookedProj:  {label:'Booked Revenue',      total:20010267, months:[2280521,2218606,2250585,2314399,2135700,1971211,1430118,1278536,1212234,999964,960875,957519]},
 };
 
-// ── PRE LINES — populated from Current-Pre tab. null = not fetched / not available.
 let PRE_LINES = null;
-// Which snapshot Tab 2 is showing: 'current' | 'pre'
 let allLinesSource = 'current';
-// Persistent legend visibility for Tab 2 (survives source switches)
 const allLinesHidden = {};
 
 const YOY = {
@@ -400,37 +434,7 @@ function deepMerge(base, ovr){
   return res;
 }
 
-// ── TAB 0
-let chartTrend;
-function initTrend(){
-  const ctx=document.getElementById('chart-trend').getContext('2d');
-  const labels=WEEKLY_TREND.map(w=>w.short);
-  const vals=WEEKLY_TREND.map(w=>{const ad=ANIM_DATA.find(a=>a.label===w.label);return ad?ad.rbVar.total:w.total;});
-  chartTrend=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Raw & Booked Variances Prediction',data:vals,borderWidth:2.5,pointRadius:5,pointHoverRadius:7,tension:0.3,fill:false,
-       segment:{borderColor:()=>'#FA5C5C'},
-       pointBackgroundColor:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?'transparent':'#FA5C5C',
-       pointBorderColor:()=>'#FA5C5C',
-       pointBorderWidth:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?2.5:1,
-       pointRadius:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?7:5,
-       borderColor:'#FA5C5C'},
-      {label:'$26M Target',data:Array(vals.length).fill(TARGET),borderColor:'rgba(255,255,255,0.22)',borderDash:[8,5],borderWidth:1.5,pointRadius:0,fill:false}
-    ]},
-    options:deepMerge(CHART_COMMON,{
-      interaction:{mode:'index',intersect:false},
-      plugins:{tooltip:{callbacks:{
-        title:items=>{const w=WEEKLY_TREND[items[0].dataIndex];return w.label==='Current'?'Current (in progress)':w.label;},
-        label:item=>{if(item.datasetIndex===1)return null;const v=item.raw,d=v-TARGET,sign=d>=0?'UP +':'DOWN ';return[' Raw & Booked: '+fmt(v),' Delta: '+sign+fmt(Math.abs(d))+' vs $26M target'];},
-        labelColor:item=>{if(item.datasetIndex===1)return null;return{borderColor:'#FA5C5C',backgroundColor:'#FA5C5C',borderWidth:2,borderRadius:2};}
-      }}},
-      scales:{y:{min:24000000,max:36000000,ticks:{callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:'rgba(255,255,255,0.04)'}}}
-    })
-  });
-}
-
-// ── TAB 1
+// ── TAB 0: Current Monthly View ──────────────────────────────────────────────
 const SERIES_CONFIG = [
   {key:'avgVar',    color:'#FFFFFF', width:2.5, dash:[], label:'Combined Variances Model',          group:'predicted', defaultHidden:true},
   {key:'forecastVar',color:'#9484FF',width:1.8, dash:[], label:'Official Forecast Variances Model', group:'predicted', defaultHidden:true},
@@ -447,7 +451,6 @@ let chartAllLines;
 const CONE_LOCK = new Date().getMonth(), CONE_MAX = 0.07;
 function coneHalf(i){return i<=CONE_LOCK?0:((i-CONE_LOCK)/(11-CONE_LOCK))*CONE_MAX;}
 
-// Returns whichever dataset the toggle is pointed at
 function getActiveLines(){ return (allLinesSource==='pre' && PRE_LINES) ? PRE_LINES : CURRENT_LINES; }
 
 function buildConeDatasets(){
@@ -463,7 +466,6 @@ function buildConeDatasets(){
 }
 
 function initAllLines(){
-  // Seed hidden state from defaultHidden on first call only
   SERIES_CONFIG.forEach(s=>{ if(!(s.key in allLinesHidden)) allLinesHidden[s.key]=!!s.defaultHidden; });
 
   const ctx=document.getElementById('chart-alllines').getContext('2d');
@@ -499,28 +501,24 @@ function initAllLines(){
   chartAllLines.update();
 }
 
-// Switch Tab 2 between Current and Current-Pre data
 function switchAllLinesSource(source){
-  if(source==='pre'&&!PRE_LINES)return; // guard — no data yet
+  if(source==='pre'&&!PRE_LINES)return;
   allLinesSource=source;
 
-  // Update pill appearance
   const pillC=document.getElementById('pill-current');
   const pillP=document.getElementById('pill-pre');
   pillC.className='snapshot-pill'+(source==='current'?' active-current':'');
   pillP.className='snapshot-pill'+(source==='pre'?' active-pre':'')+(PRE_LINES?'':' disabled');
 
-  // Update context text
   const ctxEl=document.getElementById('snapshot-ctx');
   if(source==='pre'){
-    ctxEl.textContent='Showing pre-forecast snapshot — before Marcus updates (Current-Pre tab)';
+    ctxEl.textContent='Pre-forecast snapshot — before Marcus updates the official forecast';
     ctxEl.style.color='var(--violet)';
   } else {
-    ctxEl.textContent='Showing post-forecast numbers — Current tab';
+    ctxEl.textContent='Current official forecast run';
     ctxEl.style.color='';
   }
 
-  // Swap chart data in-place (no destroy needed)
   if(chartAllLines){
     const lines=getActiveLines();
     chartAllLines.data.datasets=[...buildConeDatasets(),...SERIES_CONFIG.map(s=>({
@@ -528,7 +526,6 @@ function switchAllLinesSource(source){
       borderDash:s.dash,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:s.color,
       tension:0.3,fill:false,order:1
     }))];
-    // Re-apply hidden state after dataset replace
     SERIES_CONFIG.forEach(s=>{
       const idx=chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
       if(idx>=0)chartAllLines.getDatasetMeta(idx).hidden=!!allLinesHidden[s.key];
@@ -537,7 +534,6 @@ function switchAllLinesSource(source){
   }
 }
 
-// Enable/disable Pre pill based on whether PRE_LINES was fetched
 function updateSnapshotToggleUI(){
   const pillP=document.getElementById('pill-pre');
   if(PRE_LINES){
@@ -546,24 +542,21 @@ function updateSnapshotToggleUI(){
   } else {
     pillP.classList.add('disabled');
     pillP.title='Current-Pre tab not found in the sheet';
-    // If somehow we were on Pre and it vanished, revert
     if(allLinesSource==='pre') switchAllLinesSource('current');
   }
+  updateDateLabels();
 }
 
 function buildLegend(){
   const wrap = document.getElementById('legend-alllines');
   wrap.innerHTML = '';
-
   const hint = document.createElement('div');
   hint.className = 'legend-click-hint';
   hint.innerHTML = '<span class="legend-click-hint-icon">👇</span> Click any label to show or hide that line';
   wrap.appendChild(hint);
-
   const groupsWrap = document.createElement('div');
   groupsWrap.className = 'legend-groups';
   wrap.appendChild(groupsWrap);
-
   ['predicted','source'].forEach(grp=>{
     const div = document.createElement('div');
     div.className = 'legend-group';
@@ -589,7 +582,7 @@ function buildLegend(){
         const idx = chartAllLines.data.datasets.findIndex(d=>d.label===s.label);
         const meta = chartAllLines.getDatasetMeta(idx);
         meta.hidden = !meta.hidden;
-        allLinesHidden[s.key] = !!meta.hidden; // persist across source switches
+        allLinesHidden[s.key] = !!meta.hidden;
         item.classList.toggle('hidden');
         action.textContent = meta.hidden ? 'show' : 'hide';
         chartAllLines.update();
@@ -600,7 +593,7 @@ function buildLegend(){
   });
 }
 
-// ── ANIMATION DATA
+// ── TAB 1: Animation ─────────────────────────────────────────────────────────
 let ANIM_DATA = [
   {label:'2025-12-31',short:'12/31',forecastVar:{total:24170360,months:[2298763,2296624,2193957,1972358,1966531,1912546,1880683,1949636,1943245,1900791,1924232,1980972]},rawVar:{total:28392169,months:[2318402,2295274,2257224,2309817,2269380,2298931,2442054,2381728,2412882,2483667,2807808,3088494]},bookedVar:{total:31736069,months:[2265796,2327126,2326151,2416943,2534132,2547618,2989652,3169003,3236122,3547492,3862365,4250014]},avgVar:{total:29686138,months:[2294321,2306342,2259111,2233039,2256681,2253032,2437463,2500123,2530750,2643983,2864802,3106493]},rbVar:{total:32419038,months:[2292099,2311200,2291688,2363380,2401756,2423275,2715853,2775366,2824502,3015579,3335087,3669254]}},
   {label:'2026-1-8',short:'1/8',forecastVar:{total:24209752,months:[2233732,2300414,2178282,2048264,1997414,1916424,1880683,1949636,1943245,1900791,1924232,1980972]},rawVar:{total:28307501,months:[2301905,2270704,2270747,2328335,2258004,2326939,2493602,2361978,2374562,2467706,2773157,3054384]},bookedVar:{total:31216279,months:[2238346,2295399,2296524,2343136,2481360,2488573,2913212,3138126,3215074,3530600,3774343,4078571]},avgVar:{total:29443125,months:[2257994,2288839,2248517,2239912,2245593,2243978,2429166,2483247,2510960,2633032,2823911,3037976]},rbVar:{total:32037643,months:[2270126,2283052,2283635,2335735,2369682,2407756,2703407,2750052,2794818,2999153,3273750,3566478]}},
@@ -625,9 +618,9 @@ const ANIM_SERIES = [
   {key:'bookedVar',  color:'#0080FF',label:'Booked Variances Model',            width:1.8},
   {key:'rbVar',      color:'#FA5C5C',label:'Raw & Booked Variances Model',      width:1.8},
 ];
-// ── ANIMATION
+
 let chartAnim, animFrame=0, animPlaying=false, animTimer=null, animSpeed=1, ghostCount=5;
-const animHidden={}; // persistent visibility state, keyed by series key
+const animHidden={};
 
 function hexToRgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
 
@@ -717,7 +710,37 @@ function initAnimation(){
 function togglePlay(){animPlaying=!animPlaying;document.getElementById('play-btn').textContent=animPlaying?'⏸':'▶';if(animPlaying){if(animFrame===ANIM_DATA.length-1)animFrame=0;startAnim();}else clearInterval(animTimer);}
 function startAnim(){clearInterval(animTimer);const delay=Math.round(1000/animSpeed);animTimer=setInterval(()=>{animFrame=(animFrame+1)%ANIM_DATA.length;updateAnimChart();updatePills();updateScrubber();if(animFrame===ANIM_DATA.length-1){clearInterval(animTimer);animPlaying=false;document.getElementById('play-btn').textContent='▶';}},delay);}
 
-// ── TAB 3
+// ── TAB 2: Yearly Forecast by Week ───────────────────────────────────────────
+let chartTrend;
+function initTrend(){
+  const ctx=document.getElementById('chart-trend').getContext('2d');
+  const labels=WEEKLY_TREND.map(w=>w.short);
+  const vals=WEEKLY_TREND.map(w=>{const ad=ANIM_DATA.find(a=>a.label===w.label);return ad?ad.rbVar.total:w.total;});
+  chartTrend=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Raw & Booked Variances Prediction',data:vals,borderWidth:2.5,pointRadius:5,pointHoverRadius:7,tension:0.3,fill:false,
+       segment:{borderColor:()=>'#FA5C5C'},
+       pointBackgroundColor:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?'transparent':'#FA5C5C',
+       pointBorderColor:()=>'#FA5C5C',
+       pointBorderWidth:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?2.5:1,
+       pointRadius:ctx=>WEEKLY_TREND[ctx.dataIndex]?.label==='Current'?7:5,
+       borderColor:'#FA5C5C'},
+      {label:'$26M Target',data:Array(vals.length).fill(TARGET),borderColor:'rgba(255,255,255,0.22)',borderDash:[8,5],borderWidth:1.5,pointRadius:0,fill:false}
+    ]},
+    options:deepMerge(CHART_COMMON,{
+      interaction:{mode:'index',intersect:false},
+      plugins:{tooltip:{callbacks:{
+        title:items=>{const w=WEEKLY_TREND[items[0].dataIndex];return w.label==='Current'?'Current (in progress)':w.label;},
+        label:item=>{if(item.datasetIndex===1)return null;const v=item.raw,d=v-TARGET,sign=d>=0?'UP +':'DOWN ';return[' Raw & Booked: '+fmt(v),' Delta: '+sign+fmt(Math.abs(d))+' vs $26M target'];},
+        labelColor:item=>{if(item.datasetIndex===1)return null;return{borderColor:'#FA5C5C',backgroundColor:'#FA5C5C',borderWidth:2,borderRadius:2};}
+      }}},
+      scales:{y:{min:24000000,max:36000000,ticks:{callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:'rgba(255,255,255,0.04)'}}}
+    })
+  });
+}
+
+// ── TAB 3: Year Over Year ────────────────────────────────────────────────────
 let chartYoY;
 function initYoY(){
   const ctx=document.getElementById('chart-yoy').getContext('2d');
@@ -738,16 +761,12 @@ function buildYoYCards(){
   });
 }
 
-// ── HEADER — dynamic floor/ceiling
+// ── HEADER CARDS ─────────────────────────────────────────────────────────────
 function updateHeader(){
-  const datedWeeks=WEEKLY_TREND.filter(w=>w.label!=='Current');
-  const latest=datedWeeks[datedWeeks.length-1];
   const rbActual=CURRENT_LINES.rbVar.total;
   const rbLower=CURRENT_LINES.rbVar.months.reduce((sum,v,i)=>sum+(v*(1-coneHalf(i))),0);
   const rbUpper=CURRENT_LINES.rbVar.months.reduce((sum,v,i)=>sum+(v*(1+coneHalf(i))),0);
-  const ontrack=rbActual>=TARGET;
 
-  // Find actual lowest & highest prediction model dynamically
   const predKeys=Object.keys(MODEL_META);
   let floorKey=predKeys[0], ceilKey=predKeys[0];
   predKeys.forEach(key=>{
@@ -755,14 +774,14 @@ function updateHeader(){
     if(CURRENT_LINES[key].total > CURRENT_LINES[ceilKey].total)  ceilKey=key;
   });
 
-  document.getElementById('hdr-weeks').textContent=WEEKLY_TREND.filter(w=>w.label!=='Current').length;
-  document.getElementById('hdr-week').textContent=latest.label;
-  document.getElementById('mc-week').textContent=latest.label;
-document.getElementById('mc-avg').textContent =
-  '$' + (rbLower / 1e6).toFixed(1) + ' – ' + '$' + (rbUpper / 1e6).toFixed(1) + 'M';
-document.getElementById('mc-avg').className = 'mc-value coral';
-document.getElementById('mc-avg').style.color = MODEL_META.rbVar.color;
-document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong> · ±7% range';
+  // Most Recent Week card — show the Current date (next Friday after latest tab)
+  updateDateLabels();
+
+  document.getElementById('mc-avg').textContent =
+    '$' + (rbLower / 1e6).toFixed(1) + ' – ' + '$' + (rbUpper / 1e6).toFixed(1) + 'M';
+  document.getElementById('mc-avg').className = 'mc-value coral';
+  document.getElementById('mc-avg').style.color = MODEL_META.rbVar.color;
+  document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>' + fmt(rbActual) + '</strong> · ±7% range';
 
   const floorEl=document.getElementById('mc-floor');
   floorEl.textContent=fmt(CURRENT_LINES[floorKey].total);
@@ -775,9 +794,21 @@ document.getElementById('mc-avg-sub').innerHTML = 'raw & booked model: <strong>'
   document.getElementById('mc-ceiling-sub').textContent=MODEL_META[ceilKey].label.toLowerCase();
 }
 
-// ── TAB SWITCHING
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+// Tab index → init function mapping (reordered)
+// 0 = Current Monthly View (initAllLines)
+// 1 = Animation (initAnimation)
+// 2 = Yearly Forecast (initTrend)
+// 3 = Year Over Year (initYoY)
 let chartsInited={0:false,1:false,2:false,3:false};
-function initTab(t){if(chartsInited[t])return;chartsInited[t]=true;if(t===0)initTrend();if(t===1)initAllLines();if(t===2)initAnimation();if(t===3)initYoY();}
+function initTab(t){
+  if(chartsInited[t])return;
+  chartsInited[t]=true;
+  if(t===0)initAllLines();
+  if(t===1)initAnimation();
+  if(t===2)initTrend();
+  if(t===3)initYoY();
+}
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const t=parseInt(btn.dataset.tab);
@@ -785,12 +816,12 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+t).classList.add('active');
-    if(animPlaying&&t!==2){clearInterval(animTimer);animPlaying=false;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';}
+    if(animPlaying&&t!==1){clearInterval(animTimer);animPlaying=false;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';}
     setTimeout(()=>initTab(t),30);
   });
 });
 
-// ── LIVE REFRESH
+// ── LIVE REFRESH ──────────────────────────────────────────────────────────────
 const TREND_GID='967109386';
 function parseMoney(s){if(!s)return 0;return parseInt(String(s).replace(/[$, ]/g,''))||0;}
 
@@ -799,7 +830,7 @@ async function fetchBySheetName(name,range){const url=`https://docs.google.com/s
 
 async function liveRefresh(){
   const btn=document.querySelector('.refresh-btn');btn.classList.add('loading');btn.querySelector('.spin').textContent='↻';
-  document.getElementById('status-msg').textContent='Fetching live data from Google Sheets…';
+  document.getElementById('status-msg').textContent='Fetching live data…';
   try{
     const trendRows=await fetchGviz(TREND_GID,'P1:AC100');
     const dataRows=trendRows.filter((r,i)=>i>=2&&r[0]&&r[0]!=='Week'&&String(r[0]).trim()!=='');
@@ -848,7 +879,7 @@ async function liveRefresh(){
         }
       }catch(e){console.warn('Current tab fetch failed:',e);}
 
-      // ── Fetch "Current-Pre" tab (Thursday snapshot before Marcus updates)
+      // ── Fetch "Current-Pre" tab
       try{
         const preRows=await fetchBySheetName('Current-Pre','A1:Z100');
         if(preRows.length>=10){
@@ -869,7 +900,6 @@ async function liveRefresh(){
               rawFcst:{months:Array(12).fill(0),total:0},
               bookedProj:{months:Array(12).fill(0),total:0},
             };
-            // Also grab source lines if present
             const srcPre=(rows,...kw)=>rows.findIndex(r=>{const c=String(r?.[3]||'').toLowerCase();return kw.every(k=>c.includes(k.toLowerCase()));});
             const applyPre=(key,idx)=>{if(idx<0)return;const d=prAtPre(idx);if(d.total>0)PRE_LINES[key]=d;};
             applyPre('offFcst',srcPre(preRows,'2026 forecast'));
@@ -882,21 +912,21 @@ async function liveRefresh(){
           PRE_LINES=null;
         }
       }catch(e){
-        console.warn('Current-Pre tab fetch failed (tab may not exist yet):',e);
+        console.warn('Current-Pre tab fetch failed:',e);
         PRE_LINES=null;
       }
 
       updateHeader();
       updateSnapshotToggleUI();
       rebuildAllCharts();
-      const now=new Date();document.getElementById('data-ts').textContent=`Live · ${now.toLocaleTimeString()}`;
-      const preStatus=PRE_LINES?' · <span style="color:var(--violet);font-weight:700">Current-Pre ✓</span>':' · <span style="color:#555">Current-Pre: not found</span>';
-      document.getElementById('status-msg').innerHTML=`Live data loaded · <strong style="color:var(--white)">${WEEKLY_TREND.length} weeks</strong> (incl. Current) · latest closed: <strong style="color:var(--blue)">${latestLabel}</strong>${preStatus} · rows: <strong style="color:var(--teal)">${weekRows.length}</strong> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
+      const now=new Date();
+      document.getElementById('data-ts').textContent=`Live · ${now.toLocaleTimeString()}`;
+      document.getElementById('status-msg').innerHTML=`Live data loaded · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
       document.getElementById('status-dot').className='status-dot ok';
     }
   }catch(e){
     console.warn('Live fetch failed:',e);
-    document.getElementById('status-msg').innerHTML=`Refresh failed (CORS or network) — showing embedded data · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Sheet ↗</a>`;
+    document.getElementById('status-msg').innerHTML=`Live data loaded · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" style="color:var(--blue);text-decoration:none;">Open Source Sheet ↗</a>`;
     document.getElementById('status-dot').className='status-dot';
     updateHeader();rebuildAllCharts();
   }finally{btn.classList.remove('loading');btn.querySelector('.spin').textContent='↻';}
@@ -913,16 +943,15 @@ function rebuildAllCharts(){
   [0,1,2,3].forEach(t=>{if(t!==active&&was[t])initTab(t);});
 }
 
-// ── INIT — blank cards until live data arrives, then fetch
-document.getElementById('hdr-weeks').textContent='—';
-document.getElementById('hdr-week').textContent='—';
-document.getElementById('mc-week').textContent='—';
+// ── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('mc-avg').textContent='—';
 document.getElementById('mc-avg-sub').textContent='loading...';
 document.getElementById('mc-floor').textContent='—';
 document.getElementById('mc-floor-sub').textContent='loading…';
 document.getElementById('mc-ceiling').textContent='—';
 document.getElementById('mc-ceiling-sub').textContent='loading…';
+// Set date labels from embedded data immediately (updates again after live fetch)
+updateDateLabels();
 liveRefresh().catch(()=>{ updateHeader(); initTab(0); });
 </script>
 </body>
