@@ -318,9 +318,9 @@ const MODEL_META = {
 };
 
 // ── DATE HELPERS ─────────────────────────────────────────────────────────────
-// Format a Date as M/D/YY (e.g. 5/1/26)
+// Format a Date as M-D-YY (e.g. 5-1-26)
 function fmtPillDate(d){
-  return (d.getMonth()+1)+'/'+d.getDate()+'/'+(String(d.getFullYear()).slice(-2));
+  return (d.getMonth()+1)+'-'+d.getDate()+'-'+(String(d.getFullYear()).slice(-2));
 }
 
 // Parse a tab label like "2026-4-23" into a Date (local, midnight)
@@ -330,30 +330,30 @@ function parseTabDate(label){
   return new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
 }
 
-// Given a Date, return the next Friday on or after it
-function nextFriday(d){
+// Given a Date, return the Friday of that same calendar week (week starts Sunday)
+function fridayOfWeek(d){
   const day=d.getDay(); // 0=Sun … 6=Sat
-  const diff=(5-day+7)%7; // days until Friday; 0 means already Friday → stay
+  const diff=5-day;     // negative if past Friday, positive if before
   const fri=new Date(d);
   fri.setDate(fri.getDate()+diff);
   return fri;
 }
 
-// Compute the Current week date from WEEKLY_TREND (next Friday after latest dated tab)
-// Returns a Date object, or today as fallback
+// Compute the Current week date: Friday of the week AFTER the latest named tab's week
 function computeCurrentDate(){
   const dated=WEEKLY_TREND.filter(w=>w.label!=='Current');
   if(!dated.length) return new Date();
   const latest=dated[dated.length-1];
   const d=parseTabDate(latest.label);
   if(!d) return new Date();
-  // next Friday strictly after the latest tab date (add 1 day first so we always get the NEXT Friday)
-  const dayAfter=new Date(d);
-  dayAfter.setDate(dayAfter.getDate()+1);
-  return nextFriday(dayAfter);
+  // Find the Friday of the tab's own week, then add 7 days for the following week's Friday
+  const thisFri=fridayOfWeek(d);
+  const nextFri=new Date(thisFri);
+  nextFri.setDate(nextFri.getDate()+7);
+  return nextFri;
 }
 
-// Today's date formatted M/D/YY — used for Pre-Run pill (snapshot taken today)
+// Today's date formatted M-D-YY — used for Pre-Run pill (snapshot taken today)
 function todayPillDate(){
   return fmtPillDate(new Date());
 }
