@@ -353,16 +353,20 @@ function computeCurrentDate(){
   return nextFri;
 }
 
-// Today's date formatted M-D-YY — used for Pre-Run pill (snapshot taken today)
-function todayPillDate(){
-  return fmtPillDate(new Date());
+// date formatted M-D-YY — used for Pre-Run pill (snapshot taken today)
+function mostRecentThursday(){
+  const d = new Date();
+  const day = d.getDay();
+  const daysBack = (day + 3) % 7;
+  d.setDate(d.getDate() - daysBack);
+  return d;
 }
 
 // Update snapshot pill labels and Most Recent Week card with computed dates
 function updateDateLabels(){
   const currentDate=computeCurrentDate();
   const currentStr=fmtPillDate(currentDate);
-  const preStr=todayPillDate();
+  const preStr=fmtPillDate(mostRecentThursday());
 
   document.getElementById('pill-current-label').textContent='Current Official Run '+currentStr;
   document.getElementById('pill-pre-label').textContent='Pre-Run Data '+preStr;
